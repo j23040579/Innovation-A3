@@ -1,0 +1,35 @@
+{
+  "experiment": "baseline_v1",
+  "prefecture": "Niigata",
+  "run_utc": "2026-10-17T07:01:13.103577+00:00",
+  "dataset": "dataset/processed/Niigata_winter_avg.csv",
+  "features": [
+    "max_temperature",
+    "min_temperature",
+    "max_humidity",
+    "min_humidity"
+  ],
+  "regression_target": "snowfall_sum_log",
+  "classification_target": "risk_level_encoded",
+  "class_encoding": {
+    "Low": 0,
+    "Medium": 1,
+    "High": 2
+  },
+  "medium_threshold_cm": 0.04,
+  "high_threshold_cm": 4.154,
+  "train_winter_end_year": 2023,
+  "test_winter_end_years": [
+    2024,
+    2025
+  ],
+  "cross_validation_enabled": true,
+  "random_seed": 42,
+  "train_rows": 725,
+  "test_rows": 363,
+  "models": [
+    "linear_regression_threshold",
+    "logistic_regression",
+    "random_forest"
+  ]
+}

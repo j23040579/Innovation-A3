@@ -1,0 +1,12 @@
+{
+  "completed_at_utc": "2026-10-17T10:36:30.180164+00:00",
+  "run_count": 2,
+  "models": [
+    "LSTM",
+    "GRU"
+  ],
+  "all_attributes_retained": true,
+  "test_completed": true,
+  "forecast_completed": true,
+  "selected_run_id": "lstm/longer_history/seed_42"
+}

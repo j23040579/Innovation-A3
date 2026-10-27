@@ -1,0 +1,36 @@
+{
+  "run_id": "gru/longer_history/seed_42",
+  "model_type": "GRU",
+  "setting_name": "longer_history",
+  "setting": {
+    "name": "longer_history",
+    "lookback": 60,
+    "recurrent_units": [
+      96,
+      64
+    ],
+    "dense_units": 96,
+    "learning_rate": 0.001,
+    "dropout": 0.0
+  },
+  "seed": 42,
+  "reused_model": false,
+  "model_dir": "c:\\Users\\IAN\\Desktop\\SEM (SWIN)\\SEM 2\\COS30049-Computing Technology Innovation Project\\Assignments\\Dev\\Group1_COS30049_Computing-Technology-Innovation\\Future Weather Attributes\\trained_models\\future_weather\\60lookback\\gru\\longer_history\\seed_42",
+  "log_dir": "c:\\Users\\IAN\\Desktop\\SEM (SWIN)\\SEM 2\\COS30049-Computing Technology Innovation Project\\Assignments\\Dev\\Group1_COS30049_Computing-Technology-Innovation\\Future Weather Attributes\\experiment_logs\\60lookback\\gru\\longer_history\\seed_42",
+  "fingerprint": "9221cd08da6737e50a136f87d0a811b96c61c8d91df49361fce89384423d4346",
+  "training": {
+    "epochs_completed": 14,
+    "best_epoch": 9,
+    "best_validation_scaled_mse": 0.33335238695144653,
+    "training_seconds": 2909.609833800001,
+    "parameter_count": 81830,
+    "train_windows": 160000,
+    "validation_windows": 23092
+  },
+  "window_sha256": {
+    "train": "7c83c00f3528bdd0556e528a54634b1fbbc5872435f465f0e613ae59d149ae85",
+    "validation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+    "validation_evaluation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+    "test": "1ee8a9abf8d52ebc09edf2fa679ffe608deaf33e9ba85d667135e367cff75514"
+  }
+}

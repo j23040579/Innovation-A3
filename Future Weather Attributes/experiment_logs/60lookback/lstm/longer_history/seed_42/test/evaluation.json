@@ -1,0 +1,15 @@
+{
+  "one_step_mean_normalized_RMSE": 0.5258120210123834,
+  "recursive_mean_normalized_RMSE": 0.7951054184532729,
+  "start": "2026-01-01",
+  "end": "2026-01-31",
+  "prediction_rows": 7781,
+  "physical_attributes": 37,
+  "recursive_horizons": [
+    1,
+    7,
+    14,
+    30,
+    31
+  ]
+}

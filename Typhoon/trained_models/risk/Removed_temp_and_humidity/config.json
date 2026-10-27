@@ -1,0 +1,93 @@
+{
+  "features": [
+    "dew_point_2m_mean",
+    "dew_point_2m_max",
+    "dew_point_2m_min",
+    "precipitation_sum",
+    "rain_sum",
+    "precipitation_hours",
+    "cloud_cover_mean",
+    "cloud_cover_max",
+    "cloud_cover_min",
+    "pressure_msl_mean",
+    "pressure_msl_max",
+    "pressure_msl_min",
+    "surface_pressure_mean",
+    "surface_pressure_max",
+    "surface_pressure_min",
+    "wind_speed_10m_mean",
+    "wind_speed_10m_max",
+    "wind_speed_10m_min",
+    "wind_gusts_10m_mean",
+    "wind_gusts_10m_max",
+    "wind_gusts_10m_min",
+    "wind_direction_10m_dominant",
+    "shortwave_radiation_sum"
+  ],
+  "classes": [
+    "Low",
+    "Medium",
+    "High"
+  ],
+  "model_parameters": {
+    "Random Forest": {
+      "n_estimators": 300,
+      "max_depth": null
+    },
+    "CART": {
+      "max_depth": null
+    },
+    "Gradient Boosting": {
+      "n_estimators": 100,
+      "learning_rate": 0.1
+    },
+    "SVM": {
+      "C": 1.0,
+      "kernel": "rbf"
+    }
+  },
+  "seed": 42,
+  "input": "c:\\Users\\IAN\\Desktop\\SEM (SWIN)\\SEM 2\\COS30049-Computing Technology Innovation Project\\Assignments\\Dev\\Group1_COS30049_Computing-Technology-Innovation\\Typhoon\\data\\processed\\jma_day3_to_landfall_with_weather_prefecture.csv",
+  "row_policy": "all CSV rows; no date/day filtering",
+  "input_rows": 788,
+  "deployment_training_rows": 788,
+  "evaluation_train_rows": 642,
+  "evaluation_test_rows": 146,
+  "included_days_before_landfall": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "label_definition": {
+    "Low": "Day -3",
+    "Medium": "Day -2",
+    "High": "Day -1 and landfall day"
+  },
+  "test_storms": [
+    "1004",
+    "1109",
+    "1204",
+    "1215",
+    "14",
+    "1518",
+    "1610",
+    "1611",
+    "1616",
+    "1812",
+    "1820",
+    "1906",
+    "1910",
+    "2208",
+    "2405",
+    "306",
+    "315",
+    "416",
+    "507",
+    "704",
+    "712"
+  ],
+  "input_contract": "raw weather only; circular wind transform included in saved pipeline",
+  "interpretation": "Similarity to event weather, not probability of typhoon occurrence.",
+  "evaluation_note": "Scores use heldout-storm models; final saved models are refitted on all rows."
+}

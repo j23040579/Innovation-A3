@@ -1,0 +1,138 @@
+{
+  "schema_version": "full_attributes_lstm_gru_v1",
+  "dataset_sha256": "e8c1345d63e7d43a42cf074dd9b553782baf3a66f3f5ffac1dc57ffc8e10e217",
+  "model_types": [
+    "LSTM",
+    "GRU"
+  ],
+  "settings": [
+    {
+      "name": "baseline",
+      "lookback": 30,
+      "recurrent_units": [
+        96,
+        64
+      ],
+      "dense_units": 96,
+      "learning_rate": 0.001,
+      "dropout": 0.0
+    }
+  ],
+  "seeds": [
+    42
+  ],
+  "physical_attributes": [
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "wind_speed_10m_max",
+    "wind_gusts_10m_max",
+    "snowfall_sum",
+    "rain_sum",
+    "precipitation_hours",
+    "precipitation_sum",
+    "shortwave_radiation_sum",
+    "sunshine_duration",
+    "daylight_duration",
+    "dew_point_2m_mean",
+    "dew_point_2m_max",
+    "surface_pressure_mean",
+    "surface_pressure_max",
+    "surface_pressure_min",
+    "temperature_2m_mean",
+    "relative_humidity_2m_mean",
+    "relative_humidity_2m_max",
+    "relative_humidity_2m_min",
+    "dew_point_2m_min",
+    "cloud_cover_mean",
+    "cloud_cover_max",
+    "cloud_cover_min",
+    "pressure_msl_mean",
+    "pressure_msl_max",
+    "pressure_msl_min",
+    "wind_speed_10m_mean",
+    "wind_speed_10m_min",
+    "wind_gusts_10m_mean",
+    "wind_gusts_10m_min",
+    "river_discharge",
+    "river_discharge_p75",
+    "river_discharge_mean",
+    "river_discharge_median",
+    "river_discharge_max",
+    "wind_direction_10m_dominant"
+  ],
+  "encoded_features": [
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "wind_speed_10m_max",
+    "wind_gusts_10m_max",
+    "snowfall_sum",
+    "rain_sum",
+    "precipitation_hours",
+    "precipitation_sum",
+    "shortwave_radiation_sum",
+    "sunshine_duration",
+    "daylight_duration",
+    "dew_point_2m_mean",
+    "dew_point_2m_max",
+    "surface_pressure_mean",
+    "surface_pressure_max",
+    "surface_pressure_min",
+    "temperature_2m_mean",
+    "relative_humidity_2m_mean",
+    "relative_humidity_2m_max",
+    "relative_humidity_2m_min",
+    "dew_point_2m_min",
+    "cloud_cover_mean",
+    "cloud_cover_max",
+    "cloud_cover_min",
+    "pressure_msl_mean",
+    "pressure_msl_max",
+    "pressure_msl_min",
+    "wind_speed_10m_mean",
+    "wind_speed_10m_min",
+    "wind_gusts_10m_mean",
+    "wind_gusts_10m_min",
+    "river_discharge",
+    "river_discharge_p75",
+    "river_discharge_mean",
+    "river_discharge_median",
+    "river_discharge_max",
+    "wind_direction_sin",
+    "wind_direction_cos"
+  ],
+  "sampling_seed": 42,
+  "common_minimum_history": 30,
+  "window_sha256": {
+    "train": "bca833e52db48985d6246599ddf88363bb50293cd1b36039b975a80a9175c460",
+    "validation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+    "validation_evaluation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+    "test": "1ee8a9abf8d52ebc09edf2fa679ffe608deaf33e9ba85d667135e367cff75514"
+  },
+  "window_counts": {
+    "train": 160000,
+    "validation": 23092,
+    "validation_evaluation": 23092,
+    "test": 7781
+  },
+  "splits": {
+    "train": [
+      "2021-01-01",
+      "2025-09-30"
+    ],
+    "validation": [
+      "2025-10-01",
+      "2025-12-31"
+    ],
+    "test": [
+      "2026-01-01",
+      "2026-01-31"
+    ]
+  },
+  "selection": "minimum mean-over-attributes recursive validation RMSE / training std; mean over listed seeds",
+  "versions": {
+    "tensorflow": "2.21.0",
+    "numpy": "2.5.4",
+    "pandas": "3.0.3"
+  },
+  "future_accuracy": null
+}

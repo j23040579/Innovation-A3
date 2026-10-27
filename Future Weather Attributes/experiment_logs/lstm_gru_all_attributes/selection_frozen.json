@@ -1,0 +1,11 @@
+{
+  "frozen_at_utc": "2026-10-17T08:31:50.875949+00:00",
+  "criterion": "minimum mean-over-attributes recursive validation RMSE / training std; mean over listed seeds",
+  "selected_model_type": "GRU",
+  "selected_setting": "baseline",
+  "representative_seed": 42,
+  "forecast_run_id": "gru/baseline/seed_42",
+  "validation_mean_normalized_RMSE": 0.8582142907852897,
+  "new_test_metrics_used_for_selection": false,
+  "note": "Single-seed results do not establish a statistically reliable model difference."
+}

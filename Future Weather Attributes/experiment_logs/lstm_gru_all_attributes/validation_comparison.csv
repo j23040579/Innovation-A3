@@ -1,0 +1,3 @@
+run_id,model_type,setting_name,seed,epochs_completed,best_epoch,best_validation_scaled_mse,training_seconds,parameter_count,train_windows,validation_windows,one_step_mean_normalized_RMSE,recursive_mean_normalized_RMSE,start,end,prediction_rows,physical_attributes,recursive_horizons
+lstm/baseline/seed_42,LSTM,baseline,42,11,6,0.32864293456077576,1387.2874705999857,105094,160000,23092,0.5240214440653519,0.9624314869247722,2025-10-01,2025-12-31,23092,37,"[1, 7, 14, 30, 90, 92]"
+gru/baseline/seed_42,GRU,baseline,42,10,5,0.3377418518066406,1308.8181188000017,81830,160000,23092,0.5329044892725047,0.8582142907852897,2025-10-01,2025-12-31,23092,37,"[1, 7, 14, 30, 90, 92]"

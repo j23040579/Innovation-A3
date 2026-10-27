@@ -1,0 +1,59 @@
+{
+  "schema_version": "full_attributes_lstm_gru_v1",
+  "dataset_sha256": "e8c1345d63e7d43a42cf074dd9b553782baf3a66f3f5ffac1dc57ffc8e10e217",
+  "model_types": [
+    "LSTM",
+    "GRU"
+  ],
+  "settings": [
+    {
+      "name": "baseline",
+      "lookback": 30,
+      "recurrent_units": [
+        96,
+        64
+      ],
+      "dense_units": 96,
+      "learning_rate": 0.001,
+      "dropout": 0.0
+    }
+  ],
+  "seeds": [
+    42
+  ],
+  "epochs": 30,
+  "batch_size": 128,
+  "max_train_windows": 160000,
+  "sampling_seed": 42,
+  "max_forward_fill_days": 3,
+  "early_stopping_patience": 5,
+  "lr_patience": 3,
+  "splits": [
+    "2021-01-01",
+    "2025-09-30",
+    "2025-10-01",
+    "2025-12-31",
+    "2026-01-01",
+    "2026-01-31"
+  ],
+  "run_evaluation": true,
+  "run_forecast": true,
+  "horizon_days": [
+    1,
+    7,
+    14,
+    30,
+    90,
+    365
+  ],
+  "forecast_start": "2026-02-01",
+  "forecast_end": "2027-01-31",
+  "forecast_prefecture": null,
+  "forecast_town": null,
+  "forecast_batch_size": 256,
+  "versions": {
+    "tensorflow": "2.21.0",
+    "numpy": "2.5.4",
+    "pandas": "3.0.3"
+  }
+}

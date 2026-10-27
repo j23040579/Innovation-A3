@@ -1,0 +1,12 @@
+{
+  "run_id": "gru/baseline/seed_42",
+  "start": "2026-02-01",
+  "end": "2027-01-31",
+  "days_per_town": 365,
+  "towns": 251,
+  "actual_rows": 91615,
+  "physical_attributes": 37,
+  "all_dates_verified": true,
+  "future_accuracy": null,
+  "note": "Historical test errors do not establish year-ahead future accuracy."
+}

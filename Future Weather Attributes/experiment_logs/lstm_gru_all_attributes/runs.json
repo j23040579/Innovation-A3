@@ -1,0 +1,106 @@
+[
+  {
+    "run_id": "lstm/baseline/seed_42",
+    "model_type": "LSTM",
+    "setting_name": "baseline",
+    "setting": {
+      "name": "baseline",
+      "lookback": 30,
+      "recurrent_units": [
+        96,
+        64
+      ],
+      "dense_units": 96,
+      "learning_rate": 0.001,
+      "dropout": 0.0
+    },
+    "seed": 42,
+    "reused_model": false,
+    "model_dir": "c:\\Users\\IAN\\Desktop\\SEM (SWIN)\\SEM 2\\COS30049-Computing Technology Innovation Project\\Assignments\\Dev\\Group1_COS30049_Computing-Technology-Innovation\\Future Weather Attributes\\trained_models\\future_weather\\lstm_gru_all_attributes\\lstm\\baseline\\seed_42",
+    "log_dir": "c:\\Users\\IAN\\Desktop\\SEM (SWIN)\\SEM 2\\COS30049-Computing Technology Innovation Project\\Assignments\\Dev\\Group1_COS30049_Computing-Technology-Innovation\\Future Weather Attributes\\experiment_logs\\lstm_gru_all_attributes\\lstm\\baseline\\seed_42",
+    "fingerprint": "022270a7172e252b4735e96619955bae61426ce09a41aa3e0d5b4734cdb58186",
+    "training": {
+      "epochs_completed": 11,
+      "best_epoch": 6,
+      "best_validation_scaled_mse": 0.32864293456077576,
+      "training_seconds": 1387.2874705999857,
+      "parameter_count": 105094,
+      "train_windows": 160000,
+      "validation_windows": 23092
+    },
+    "window_sha256": {
+      "train": "bca833e52db48985d6246599ddf88363bb50293cd1b36039b975a80a9175c460",
+      "validation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+      "validation_evaluation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+      "test": "1ee8a9abf8d52ebc09edf2fa679ffe608deaf33e9ba85d667135e367cff75514"
+    },
+    "validation": {
+      "one_step_mean_normalized_RMSE": 0.5240214440653519,
+      "recursive_mean_normalized_RMSE": 0.9624314869247722,
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "prediction_rows": 23092,
+      "physical_attributes": 37,
+      "recursive_horizons": [
+        1,
+        7,
+        14,
+        30,
+        90,
+        92
+      ]
+    }
+  },
+  {
+    "run_id": "gru/baseline/seed_42",
+    "model_type": "GRU",
+    "setting_name": "baseline",
+    "setting": {
+      "name": "baseline",
+      "lookback": 30,
+      "recurrent_units": [
+        96,
+        64
+      ],
+      "dense_units": 96,
+      "learning_rate": 0.001,
+      "dropout": 0.0
+    },
+    "seed": 42,
+    "reused_model": false,
+    "model_dir": "c:\\Users\\IAN\\Desktop\\SEM (SWIN)\\SEM 2\\COS30049-Computing Technology Innovation Project\\Assignments\\Dev\\Group1_COS30049_Computing-Technology-Innovation\\Future Weather Attributes\\trained_models\\future_weather\\lstm_gru_all_attributes\\gru\\baseline\\seed_42",
+    "log_dir": "c:\\Users\\IAN\\Desktop\\SEM (SWIN)\\SEM 2\\COS30049-Computing Technology Innovation Project\\Assignments\\Dev\\Group1_COS30049_Computing-Technology-Innovation\\Future Weather Attributes\\experiment_logs\\lstm_gru_all_attributes\\gru\\baseline\\seed_42",
+    "fingerprint": "433f7369e07a383715d1c97bf57aafc79aab20095e80fabf4d0913abb90dec0e",
+    "training": {
+      "epochs_completed": 10,
+      "best_epoch": 5,
+      "best_validation_scaled_mse": 0.3377418518066406,
+      "training_seconds": 1308.8181188000017,
+      "parameter_count": 81830,
+      "train_windows": 160000,
+      "validation_windows": 23092
+    },
+    "window_sha256": {
+      "train": "bca833e52db48985d6246599ddf88363bb50293cd1b36039b975a80a9175c460",
+      "validation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+      "validation_evaluation": "6c6e94043a1353f83599bce5bd8d5d76bc40b88d49fd5a79ae85e2a0295f1be0",
+      "test": "1ee8a9abf8d52ebc09edf2fa679ffe608deaf33e9ba85d667135e367cff75514"
+    },
+    "validation": {
+      "one_step_mean_normalized_RMSE": 0.5329044892725047,
+      "recursive_mean_normalized_RMSE": 0.8582142907852897,
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "prediction_rows": 23092,
+      "physical_attributes": 37,
+      "recursive_horizons": [
+        1,
+        7,
+        14,
+        30,
+        90,
+        92
+      ]
+    }
+  }
+]
