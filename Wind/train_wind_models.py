@@ -72,6 +72,8 @@ import time
 import joblib
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from sklearn.linear_model import LinearRegression
@@ -331,7 +333,7 @@ print(f'R²  : {best["R²"]:.4f}')
 from pathlib import Path
 import json, datetime
 import pandas as pd
-experiment_root = Path.cwd() / "experiment_logs" / EXPERIMENT_ID
+experiment_root = ROOT / "experiment_logs" / EXPERIMENT_ID
 experiment_root.mkdir(parents=True, exist_ok=True)
 active_features = globals().get("FEATURES", globals().get("feature_columns", globals().get("F", [])))
 metadata = {"experiment_id": EXPERIMENT_ID, "notebook": "train_wind_models_split", "created_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),

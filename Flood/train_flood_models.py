@@ -37,6 +37,8 @@ assert 0 < TEST_SIZE < 1, "TEST_SIZE must be between 0 and 1"
 
 # %% — original code cell 3
 from pathlib import Path
+import matplotlib
+matplotlib.use('Agg')
 import pandas as pd, numpy as np, matplotlib.pyplot as plt, joblib
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
