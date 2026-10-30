@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
-import numpy as np
+import pandas as pd
 
 class BaseProcessor(ABC):
     """
@@ -15,9 +15,9 @@ class BaseProcessor(ABC):
         pass
 
     @abstractmethod
-    def transform(self, weather_data: Dict[str, Any]) -> np.ndarray:
+    def transform(self, weather_data: Dict[str, Any]) -> pd.DataFrame:
         """
-        Transforms raw weather dictionary into a 2D numpy array [1, num_features]
-        ready for model.predict() or model.predict_proba().
+        Transforms raw weather dictionary into a one-row DataFrame whose
+        columns match the training feature names and order.
         """
         pass

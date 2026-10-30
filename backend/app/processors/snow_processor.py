@@ -39,8 +39,12 @@ class SnowProcessor(BaseProcessor):
         max_hum = float(weather_data.get("relative_humidity_2m_max", 80.0) or 80.0)
         min_hum = float(weather_data.get("relative_humidity_2m_min", 50.0) or 50.0)
         max_wind = float(weather_data.get("wind_speed_10m_max", 10.0) or 10.0)
-        min_wind = float(weather_data.get("wind_speed_10m_min", 2.0) or 2.0)
-        min_wind_log = float(np.log1p(max(0.0, min_wind)))
+        supplied_log = weather_data.get("min_wind_speed_log")
+        if supplied_log is not None:
+            min_wind_log = float(supplied_log)
+        else:
+            min_wind = float(weather_data.get("wind_speed_10m_min", 2.0) or 2.0)
+            min_wind_log = float(np.log1p(max(0.0, min_wind)))
 
         vector = [max_temp, min_temp, max_hum, min_hum, max_wind, min_wind_log]
         return pd.DataFrame([vector], columns=self.required_features)

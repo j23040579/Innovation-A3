@@ -43,8 +43,11 @@ class RainProcessor(BaseProcessor):
                 # Extract month from date string (YYYY-MM-DD) if not present
                 val = weather_data.get("month")
                 if val is None and "date" in weather_data:
-                    val = int(weather_data["date"].split("-")[1])
-                values.append(float(val or 1))
+                    val = pd.to_datetime(weather_data["date"], errors="raise").month
+                month = int(float(val)) if val is not None else 1
+                if not 1 <= month <= 12:
+                    raise ValueError(f"month must be between 1 and 12, got {month}")
+                values.append(float(month))
             else:
                 val = weather_data.get(feat, 0.0)
                 values.append(float(val) if val is not None else 0.0)

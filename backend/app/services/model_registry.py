@@ -42,6 +42,7 @@ class ModelRegistry:
             if path.exists():
                 try:
                     loaded = joblib.load(path)
+                    self._validate_model_contract(hazard, loaded, path)
                     self.models[hazard] = loaded
                     self.model_names[hazard] = display_name
                     logger.info(f"Loaded {hazard.capitalize()} model: '{display_name}' from {path.name}")
@@ -50,12 +51,62 @@ class ModelRegistry:
                     logger.warning(f"Could not load candidate model {path.name} for {hazard}: {e}")
         return False
 
+    def _processor_for(self, hazard: str):
+        return {
+            "flood": flood_processor,
+            "rain": rain_processor,
+            "snow": snow_processor,
+            "temperature": temperature_processor,
+            "typhoon": typhoon_processor,
+            "wind": wind_processor,
+        }[hazard]
+
+    def _validate_model_contract(self, hazard: str, model: Any, path: Path) -> None:
+        """Reject artifacts that cannot accept the processor's feature contract."""
+        processor_features = set(self._processor_for(hazard).required_features)
+        model_features = getattr(model, "feature_names_in_", None)
+        if model_features is not None:
+            missing = set(model_features) - processor_features
+            if missing:
+                raise ValueError(
+                    f"{path.name} requires unsupported {hazard} features: {sorted(missing)}"
+                )
+            return
+
+        expected_count = len(processor_features)
+        actual_count = getattr(model, "n_features_in_", None)
+        if actual_count is not None and hazard != "snow" and actual_count != expected_count:
+            raise ValueError(
+                f"{path.name} expects {actual_count} features, processor provides {expected_count}"
+            )
+
+    def _model_input(self, hazard: str, weather_data: Dict[str, Any]) -> Any:
+        """Build a named DataFrame aligned to the loaded model's feature order."""
+        frame = self._processor_for(hazard).transform(weather_data)
+        expected = getattr(self.models[hazard], "feature_names_in_", None)
+        if expected is not None:
+            missing = [column for column in expected if column not in frame.columns]
+            if missing:
+                raise ValueError(f"Missing {hazard} model features: {missing}")
+            return frame.loc[:, list(expected)]
+        return frame
+
+    @staticmethod
+    def _probability(model: Any, model_input: Any) -> Optional[float]:
+        if not hasattr(model, "predict_proba"):
+            return None
+        probabilities = np.asarray(model.predict_proba(model_input), dtype=float)
+        return float(np.max(probabilities[0]))
+
     def load_all_models(self) -> None:
         """
         Loads the best performing models for each hazard from the project folders,
         with fallback options if version discrepancies or missing files occur.
         """
         logger.info("Attempting to load trained .joblib models from project directory...")
+        self.models.clear()
+        self.model_names.clear()
+        self.is_ready = False
         loaded_count = 0
 
         # 1. Flood Model (Gradient Boosting -> CART -> ID3)
@@ -120,9 +171,9 @@ class ModelRegistry:
 
         # --- FLOOD ---
         if hazard == "flood":
-            X = flood_processor.transform(weather_data)
+            X = self._model_input(hazard, weather_data)
             pred = model.predict(X)[0]
-            prob = float(np.max(model.predict_proba(X))) if hasattr(model, "predict_proba") else None
+            prob = self._probability(model, X)
             return HazardRiskResult(
                 hazard="flood",
                 model_name=self.model_names.get("flood", "Gradient Boosting (Flood Classifier)"),
@@ -136,9 +187,9 @@ class ModelRegistry:
 
         # --- RAIN ---
         elif hazard == "rain":
-            X = rain_processor.transform(weather_data)
+            X = self._model_input(hazard, weather_data)
             pred = model.predict(X)[0]
-            prob = float(np.max(model.predict_proba(X))) if hasattr(model, "predict_proba") else None
+            prob = self._probability(model, X)
             is_rain = str(pred) not in ["No/Minimal Rain", "No Rain", "None"]
             return HazardRiskResult(
                 hazard="rain",
@@ -152,14 +203,9 @@ class ModelRegistry:
 
         # --- SNOW ---
         elif hazard == "snow":
-            df_in = snow_processor.transform(weather_data)
-            expected_cols = getattr(model, "feature_names_in_", None)
-            if expected_cols is not None:
-                cols_to_use = [c for c in expected_cols if c in df_in.columns]
-                if cols_to_use:
-                    df_in = df_in[cols_to_use]
+            df_in = self._model_input(hazard, weather_data)
             pred = model.predict(df_in)[0]
-            prob = float(np.max(model.predict_proba(df_in))) if hasattr(model, "predict_proba") else None
+            prob = self._probability(model, df_in)
             risk_labels = {0: "Low", 1: "Medium", 2: "High"}
             risk_str = risk_labels.get(pred, str(pred))
             return HazardRiskResult(
@@ -174,7 +220,7 @@ class ModelRegistry:
 
         # --- TEMPERATURE (REGRESSION) ---
         elif hazard == "temperature":
-            X = temperature_processor.transform(weather_data)
+            X = self._model_input(hazard, weather_data)
             pred_temp = float(model.predict(X)[0])
             risk = "Critical" if pred_temp >= 36 else ("High" if pred_temp >= 33 else ("Medium" if pred_temp >= 28 else "Low"))
             return HazardRiskResult(
@@ -189,7 +235,7 @@ class ModelRegistry:
 
         # --- WIND (REGRESSION) ---
         elif hazard == "wind":
-            X = wind_processor.transform(weather_data)
+            X = self._model_input(hazard, weather_data)
             pred_wind = float(model.predict(X)[0])
             risk = "Critical" if pred_wind > 65 else ("High" if pred_wind > 50 else ("Medium" if pred_wind > 35 else "Low"))
             return HazardRiskResult(
@@ -204,9 +250,9 @@ class ModelRegistry:
 
         # --- TYPHOON ---
         elif hazard == "typhoon":
-            df_in = typhoon_processor.transform(weather_data)
+            df_in = self._model_input(hazard, weather_data)
             pred = model.predict(df_in)[0]
-            prob = float(np.max(model.predict_proba(df_in))) if hasattr(model, "predict_proba") else None
+            prob = self._probability(model, df_in)
             return HazardRiskResult(
                 hazard="typhoon",
                 model_name=self.model_names.get("typhoon", "Random Forest Pipeline (Typhoon)"),

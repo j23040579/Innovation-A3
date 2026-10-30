@@ -37,8 +37,7 @@ import time, joblib, numpy as np, pandas as pd, matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import GradientBoostingRegressor, HistGradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-ROOT=Path.cwd()
-if ROOT.name.lower()!="temperature" and (ROOT/"Temperature").exists(): ROOT=ROOT/"Temperature"
+ROOT = Path(__file__).resolve().parent
 M=ROOT/"trained_models"; M.mkdir(exist_ok=True)
 F=["shortwave_radiation_sum","sunshine_duration","daylight_duration","cloud_cover_mean","dew_point_2m_mean","month"]
 TARGET="temperature_2m_max"
