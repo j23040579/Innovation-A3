@@ -81,10 +81,7 @@ from sklearn.ensemble import GradientBoostingRegressor, HistGradientBoostingRegr
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 # Resolve project directory.
-ROOT = Path.cwd()
-if ROOT.name.lower() != "wind":
-    if (ROOT / "Wind").exists():
-        ROOT = ROOT / "Wind"
+ROOT = Path(__file__).resolve().parent
 
 DATA_FILE = ROOT / "dataset" / "wind_preprocessed.csv"
 MODEL_DIR = ROOT / "trained_models"

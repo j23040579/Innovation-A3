@@ -30,13 +30,7 @@ def display(*objects):
 # %% — original code cell 3
 from pathlib import Path
 
-ROOT = Path.cwd()
-# Notebook is now located directly in Typhoon/. Support running from
-# either the Typhoon directory or the containing repository directory.
-if ROOT.name == "training":
-    ROOT = ROOT.parent
-elif (ROOT / "Typhoon" / "data").is_dir():
-    ROOT = ROOT / "Typhoon"
+ROOT = Path(__file__).resolve().parent
 if not (ROOT / "data" / "processed").is_dir():
     raise FileNotFoundError(
         "Run the notebook from Typhoon/ (or its parent directory). "

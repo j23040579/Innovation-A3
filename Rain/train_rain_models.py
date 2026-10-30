@@ -23,8 +23,7 @@ RANDOM_STATE = 42
 MODEL_PARAM_OVERRIDES = {}
 
 def main():
-    R = Path.cwd()
-    R = R if R.name.lower() == "rain" else (R / "Rain" if (R / "Rain").exists() else R.parent / "Rain")
+    R = Path(__file__).resolve().parent
     D = R / "dataset" / "rain_preprocessed.csv"
     M = R / "trained_models"
     M.mkdir(exist_ok=True)
