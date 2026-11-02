@@ -64,6 +64,7 @@ let currentPref = 'tokyo';
 let chartPref = 'tokyo';
 let selectedMapHazard = 'typhoon';
 const SNOW_MODEL_PREFECTURES = new Set(['niigata','yamagata']);
+let mapSnowData = new Map();
 let charts = {};
 // Period applied by the last successful Check risk: {from, to, months}. Null = full year.
 let activePeriod = null;
@@ -298,12 +299,23 @@ function mapRiskColor(score){
   if(Number(score) < 45) return '#F59E0B';
   return '#C2410C';
 }
+function hasMapSnowPrediction(id){
+  const prediction = mapSnowData.get(id)?.snow_prediction;
+  return prediction?.execution_mode === 'inference'
+    && ['low','medium','high'].includes(String(prediction.risk_level || '').toLowerCase());
+}
+function mapSnowColor(id){
+  if(!hasMapSnowPrediction(id)) return '#FFFFFF';
+  const risk = String(mapSnowData.get(id).snow_prediction.risk_level).toLowerCase();
+  return risk === 'high' ? '#C2410C' : risk === 'medium' ? '#F59E0B' : '#FED7AA';
+}
 function updateMapChoropleth(){
   const selector = document.getElementById('map-hazard-select');
   if(selector){
     const snowOption = selector.querySelector('option[value="snow"]');
-    if(snowOption) snowOption.hidden = !SNOW_MODEL_PREFECTURES.has(currentPref);
-    if(selectedMapHazard === 'snow' && !SNOW_MODEL_PREFECTURES.has(currentPref)) selectedMapHazard = 'typhoon';
+    const snowAvailable = hasMapSnowPrediction(currentPref);
+    if(snowOption) snowOption.hidden = !snowAvailable;
+    if(selectedMapHazard === 'snow' && !snowAvailable) selectedMapHazard = 'typhoon';
     selector.value = selectedMapHazard;
   }
   const hazardMeta = [
@@ -311,7 +323,6 @@ function updateMapChoropleth(){
     {key:'rain', label:'Heavy rain'},
     {key:'flood', label:'Flood'},
     {key:'landslide', label:'Landslide'},
-    {key:'thunder', label:'Thunderstorm'},
     {key:'snow', label:'Heavy snow'}
   ].find(h=>h.key===selectedMapHazard);
   const legendTitle = document.getElementById('map-legend-title');
@@ -322,7 +333,7 @@ function updateMapChoropleth(){
       const selected = el.dataset.id === currentPref;
       const darkMap = document.documentElement.getAttribute('data-theme') === 'dark';
       const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
-      el.style.fill = mapRiskColor(score);
+      el.style.fill = selectedMapHazard === 'snow' ? mapSnowColor(el.dataset.id) : mapRiskColor(score);
       el.style.opacity = '1';
       el.style.strokeWidth = selected ? '1.4' : '1';
       el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
@@ -346,14 +357,15 @@ function zoomToPrefecture(id){
 const mapHazardSelect = document.getElementById('map-hazard-select');
 mapHazardSelect?.addEventListener('change', ()=>{
   selectedMapHazard = mapHazardSelect.value;
-  if(selectedMapHazard === 'snow' && !SNOW_MODEL_PREFECTURES.has(currentPref)){
-    selectedMapHazard = 'typhoon';
-    mapHazardSelect.value = selectedMapHazard;
-  }
   updateMapChoropleth();
 });
+window.updateKikanSnowMapData = items=>{
+  const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  mapSnowData = new Map(items.map(item=>[normalize(item.prefecture), item]));
+  updateMapChoropleth();
+};
 function selectPref(id, options = {}){
-  if(selectedMapHazard === 'snow' && !SNOW_MODEL_PREFECTURES.has(id)) selectedMapHazard = 'typhoon';
+  if(selectedMapHazard === 'snow' && !hasMapSnowPrediction(id)) selectedMapHazard = 'typhoon';
   currentPref = id;
   chartPref = id;
   const p = PREFS[id];
@@ -372,7 +384,7 @@ function selectPref(id, options = {}){
     el.setAttribute('aria-pressed', String(selected));
     const darkMap = document.documentElement.getAttribute('data-theme')==='dark';
     const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
-    el.style.fill = mapRiskColor(score);
+    el.style.fill = selectedMapHazard === 'snow' ? mapSnowColor(el.dataset.id) : mapRiskColor(score);
     el.style.opacity = '1';
     el.style.strokeWidth = selected ? '1.4' : '1';
     el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');

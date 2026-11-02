@@ -245,14 +245,15 @@ class WeatherQueryService:
             lon = float(group["longitude"].mean()) if "longitude" in group else None
             temp_mean = float(group["temperature_2m_mean"].mean()) if "temperature_2m_mean" in group else None
             rain = float(group["rain_sum"].mean()) if "rain_sum" in group else 0.0
-            snow = float(group["snowfall_sum"].mean()) if "snowfall_sum" in group else 0.0
+            snow_values = group["snowfall_sum"].dropna() if "snowfall_sum" in group else pd.Series(dtype=float)
+            snow = float(snow_values.mean()) if not snow_values.empty else None
             wind = float(group["wind_speed_10m_max"].mean()) if "wind_speed_10m_max" in group else 0.0
 
             # Simple rule-based initial risk score for the map before detailed model prediction
             risk = "Low"
-            if rain > 50 or wind > 60 or snow > 20:
+            if rain > 50 or wind > 60 or (snow is not None and snow > 20):
                 risk = "High"
-            elif rain > 20 or wind > 40 or snow > 5:
+            elif rain > 20 or wind > 40 or (snow is not None and snow > 5):
                 risk = "Medium"
 
             items.append({
@@ -262,7 +263,7 @@ class WeatherQueryService:
                 "longitude": round(lon, 4) if lon is not None else None,
                 "temperature_mean": round(temp_mean, 2) if temp_mean is not None else None,
                 "rain_sum": round(rain, 2),
-                "snowfall_sum": round(snow, 2),
+                "snowfall_sum": round(snow, 2) if snow is not None else None,
                 "wind_speed_max": round(wind, 2),
                 "primary_risk_level": risk,
             })

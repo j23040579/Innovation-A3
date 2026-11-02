@@ -103,10 +103,10 @@ export const kikanMarkup = `<header class="topnav">
   <div><span class="summary-kicker">Overall risk level</span><strong id="map-summary-hazard">Low</strong></div>
 </div>
 <div class="section-label">Prefecture safety &amp; evacuation map</div>
-<p class="map-data-note">Choose a hazard to compare its modeled score across prefectures. These prototype scores are illustrative, not live warnings.</p>
+<p class="map-data-note">Choose a hazard to compare risk across prefectures. Heavy snow uses the available model prediction.</p>
 <div class="map-shell">
 <div class="map-pane">
-<div class="map-hazard-control"><label for="map-hazard-select">Show map by disaster</label><select id="map-hazard-select" aria-label="Choose disaster type for map shading"><option value="typhoon">Typhoon</option><option value="rain">Heavy rain</option><option value="flood">Flood</option><option value="thunder">Thunderstorm</option><option value="snow">Heavy snow (Niigata &amp; Yamagata only)</option></select></div>
+<div class="map-hazard-control"><label for="map-hazard-select">Show map by disaster</label><select id="map-hazard-select" aria-label="Choose disaster type for map shading"><option value="typhoon">Typhoon</option><option value="rain">Heavy rain</option><option value="flood">Flood</option><option value="snow" hidden>Heavy snow</option></select></div>
 <aside class="map-legend" id="map-legend" aria-label="Map colour legend">
   <strong id="map-legend-title">Typhoon risk</strong>
   <ul class="map-legend-list">

@@ -7,11 +7,25 @@ sys.path.insert(0, str(BACKEND_DIR))
 
 from fastapi.testclient import TestClient
 from app.main import app
+from app.services.weather_query_service import WeatherQueryService
+import pandas as pd
+
+def test_map_overview_preserves_snow_data_availability():
+    service = WeatherQueryService()
+    service.df = pd.DataFrame([
+        {"prefecture": "Niigata", "date": "2026-06-15", "snowfall_sum": 12.5},
+        {"prefecture": "Tokyo", "date": "2026-06-15", "snowfall_sum": None},
+    ])
+    items = {item["prefecture"]: item for item in service.get_map_overview("2026-06-15")}
+    assert items["Niigata"]["snowfall_sum"] == 12.5
+    assert items["Tokyo"]["snowfall_sum"] is None
 
 def run_tests():
     print("=" * 60)
     print("RUNNING AUTOMATED FASTAPI BACKEND VERIFICATION SUITE")
     print("=" * 60)
+    test_map_overview_preserves_snow_data_availability()
+    print("\n[0/7] Passed focused map snowfall availability check.")
 
     # Use TestClient with lifespan context
     with TestClient(app) as client:
@@ -63,6 +77,27 @@ def run_tests():
         assert res.status_code == 200, f"Expected 200, got {res.status_code}"
         mo = res.json()
         print(f"  Passed! Map data loaded for {mo['count']} prefectures.")
+
+        for prefecture in ("Yamagata",):
+            snow_res = client.post(
+                "/api/predict",
+                json={"prefecture": prefecture, "date": "2026-06-15", "hazards": ["snow"]},
+            )
+            assert snow_res.status_code == 200, (
+                f"Snow prediction failed for {prefecture}: {snow_res.status_code} {snow_res.text}"
+            )
+            snow_prediction = snow_res.json()
+            snow_risk = next(risk for risk in snow_prediction["risks"] if risk["hazard"] == "snow")
+            assert snow_prediction["execution_mode"] == "inference", (
+                f"Expected model-backed snow prediction for {prefecture}"
+            )
+            assert snow_risk["risk_level"] in {"Low", "Medium", "High"}
+        niigata_snow = client.post(
+            "/api/predict",
+            json={"prefecture": "Niigata", "date": "2026-06-15", "hazards": ["snow"]},
+        )
+        assert niigata_snow.status_code == 404, "Niigata should remain unavailable without forecast data"
+        print("  Passed! Yamagata has a model-backed snow prediction; unsupported Niigata has none.")
 
         # Test 7: Multi-hazard Disaster Prediction
         print("\n[7/7] Testing POST /api/predict ...")
