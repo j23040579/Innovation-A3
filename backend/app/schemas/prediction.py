@@ -20,6 +20,12 @@ class HazardRiskResult(BaseModel):
     threshold_exceeded: bool = Field(False, description="True if hazard triggers warning threshold")
     alert_message: Optional[str] = Field(None, description="Actionable alert recommendation")
     contributing_factors: Optional[Dict[str, float]] = Field(None, description="Key input features and values considered")
+    profile_match_class: Optional[str] = Field(
+        None, description="Best-matching weather profile for profile-class models"
+    )
+    profile_match_probabilities: Optional[Dict[str, float]] = Field(
+        None, description="Class probabilities for a weather-profile match, not hazard occurrence"
+    )
 
 class PredictionResponse(BaseModel):
     prefecture: str

@@ -18,6 +18,7 @@ const riskColors = {
   warm: { className: "risk-medium", color: "#F59E0B" },
   high: { className: "risk-high", color: "#C2410C" },
   critical: { className: "risk-high", color: "#9A3412" },
+  unassessed: { className: "risk-unassessed", color: "var(--ink-soft)" },
 };
 
 function classifyTemperature(tempC) {
@@ -59,7 +60,12 @@ function renderRisks(risks = []) {
   grid.replaceChildren();
   risks.forEach((risk) => {
     const style = riskStyle(risk.risk_level);
-    const percentage = Math.max(0, Math.min(100, Number(risk.probability || 0) * 100));
+    const profileProbabilities = risk.profile_match_probabilities;
+    const profileMatchProbability = profileProbabilities
+      ? Math.max(0, ...Object.values(profileProbabilities).map(Number).filter(Number.isFinite))
+      : null;
+    const probability = risk.probability ?? profileMatchProbability ?? 0;
+    const percentage = Math.max(0, Math.min(100, Number(probability) * 100));
     const card = document.createElement("div");
     card.className = "card hazard";
     const top = document.createElement("div");
@@ -76,6 +82,9 @@ function renderRisks(risks = []) {
     top.append(name, level);
     const track = document.createElement("div");
     track.className = "bar-track";
+    if (profileProbabilities) {
+      track.setAttribute("aria-label", "Landfall weather profile match, not typhoon occurrence probability");
+    }
     const fill = document.createElement("div");
     fill.className = "bar-fill";
     fill.style.width = `${percentage}%`;
@@ -83,7 +92,13 @@ function renderRisks(risks = []) {
     track.appendChild(fill);
     const message = document.createElement("small");
     message.textContent = risk.alert_message || "Live backend prediction";
-    card.append(top, track, message);
+    if (profileProbabilities) {
+      const profileLabel = document.createElement("small");
+      profileLabel.textContent = "Landfall profile match (not typhoon occurrence probability)";
+      card.append(top, profileLabel, track, message);
+    } else {
+      card.append(top, track, message);
+    }
     grid.appendChild(card);
   });
 }

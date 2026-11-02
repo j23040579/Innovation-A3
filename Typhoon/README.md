@@ -84,3 +84,7 @@ training/trained_models/
 - **y:** `risk` (Low / Moderate / High). Labels are based on days before confirmed JMA landfall: Day -3 Low, Day -2 Moderate, Day -1/0 High.
 - **Split:** 80%/20% by `landfall_event_id`, not individual rows.
 - **Note:** This dataset contains only sequences associated with confirmed landfalls. Weather-only classification on these rows is **not validated as a general future typhoon occurrence/landfall predictor**. It also assumes a meaningful future `nearest_prefecture` is available from a separate trajectory model.
+
+## Backend interpretation
+
+The backend reports typhoon occurrence risk as **Unassessed**. Its `profile_match_class` and `profile_match_probabilities` describe similarity to the Low (Day -3), Medium (Day -2), and High (Day -1/landfall) weather profiles only; they are not typhoon occurrence probabilities or warning levels. Estimating occurrence requires training and validating on non-landfall weather as well as landfall events.
