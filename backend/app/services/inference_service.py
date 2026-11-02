@@ -1,5 +1,6 @@
 import logging
 from typing import Dict, List, Optional, Any
+from app.core.temperature_status import STATUS_SEVERITY, classify_temperature, temperature_alert
 from app.schemas.prediction import HazardRiskResult, PredictionResponse
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,13 @@ class InferenceService:
 
         results: List[HazardRiskResult] = []
         highest_severity_rank = 0
-        severity_rank_map = {"Low": 0, "Medium": 1, "High": 2, "Critical": 3}
+        severity_rank_map = {
+            "Low": 0,
+            "Medium": 1,
+            "High": 2,
+            "Critical": 3,
+            **STATUS_SEVERITY,
+        }
 
         for hazard in hazards:
             result = self._predict_single_hazard(hazard, weather_features, prefecture, town)
@@ -146,16 +153,15 @@ class InferenceService:
             )
 
         elif hazard == "temperature":
-            # Regression target: temperature_2m_max
-            risk = "Critical" if temp_max >= 36 else ("High" if temp_max >= 33 else ("Medium" if temp_max >= 28 else "Low"))
+            status = classify_temperature(temp_max)
             return HazardRiskResult(
                 hazard="temperature",
                 model_name="HistGradientBoosting Regressor",
-                risk_level=risk,
-                predicted_value=round(temp_max, 1),
+                risk_level=status,
+                predicted_value=round(temp_max, 2),
                 unit="°C",
-                threshold_exceeded=temp_max >= 33,
-                alert_message="Heat stroke alert: extreme high temperatures expected" if temp_max >= 33 else "Temperatures within comfortable range",
+                threshold_exceeded=status in {"Frozen", "Severe Cold", "Hard Freeze", "Light Freeze", "Warm"},
+                alert_message=temperature_alert(status),
                 contributing_factors={"temperature_2m_max": temp_max, "dew_point_2m_mean": float(weather.get("dew_point_2m_mean", 15))}
             )
 
