@@ -22,7 +22,7 @@ The system is partitioned into two backend halves and two frontend halves:
 ┌───────────────────────────────────┴────────────────────────────────────┐
 │                       BACKEND 1: COMPLETED  (Ian)                      │
 │   • FastAPI Server, Lifespan Startup, CORS Middleware, Error Handling  │
-│   • 91,615-Row Pre-generated Future Dataset In-Memory Query Engine     │
+│   • 175,449-Row Pre-generated Future Dataset In-Memory Query Engine    │
 │   • Time-Series Slicing (for D3) & Map Overviews (for Choropleth)      │
 │   • Disaster Prediction API Gateway & Fallback Safe Mock Engine        │
 └───────────────────────────────────┬────────────────────────────────────┘
@@ -73,7 +73,7 @@ flowchart TB
             E_Predict["POST /api/predict<br/><i>Multi-Hazard Gateway</i>"]:::endpoint
         end
  
-        WQS[("WeatherQueryService<br/>91,615 forecast rows<br/><i>indexed in-memory</i>")]:::data
+        WQS[("WeatherQueryService<br/>175,449 forecast rows<br/><i>indexed in-memory</i>")]:::data
         Bridge["InferenceService Bridge<br/><i>Orchestrator & Fallback Guard</i>"]:::bridge
     end
  
@@ -172,7 +172,7 @@ backend/
 │   │   ├── routes_weather.py             [B1] /api/weather endpoints (daily, timeseries, map-overview)
 │   │   └── routes_predict.py             [B1] /api/predict disaster gateway
 │   ├── services/
-│   │   ├── weather_query_service.py       [B1] Fast in-memory query engine (91,615 rows indexed)
+│   │   ├── weather_query_service.py       [B1] Fast in-memory query engine (175,449 rows indexed)
 │   │   ├── inference_service.py          [B1] Bridge between API and Backend 2 ModelRegistry
 │   │   └── model_registry.py            x [B2] Multi-candidate Joblib loader & inference engine
 │   └── processors/                      x [B2] Feature extraction & transformer modules
@@ -328,7 +328,7 @@ python backend/test_backend.py
 ### Base Information
 * **Base URL:** `http://localhost:8000`
 * **CORS:** Accepts all localhost ports (`5173`, `3000`, `4173`, etc.)
-* **Date Limits:** Future forecast covers **`2026-02-01` to `2027-01-31`** (365 days).
+* **Date Limits:** Future forecast covers **`2026-02-01` to `2027-12-31`** (699 calendar days).
 
 ### Endpoints Reference
 
@@ -355,8 +355,8 @@ python backend/test_backend.py
 ```json
 {
   "min_date": "2026-02-01",
-  "max_date": "2027-01-31",
-  "total_days": 365
+  "max_date": "2027-12-31",
+  "total_days": 699
 }
 ```
 
@@ -493,5 +493,3 @@ python backend/run.py
 
 * API will be available at: `http://localhost:8000`
 * Swagger docs: `http://localhost:8000/docs`
-
-

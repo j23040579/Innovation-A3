@@ -79,7 +79,7 @@ HORIZON_DAYS = [1, 7, 14, 30, 90, 365]  # cumulative recursive scores, where cov
 # Future forecasts use that selected configuration and the FIRST listed seed.
 RUN_FORECAST = True
 FORECAST_START = "2026-02-01"
-FORECAST_END = "2027-01-31"             # None = one complete year from start
+FORECAST_END = "2027-12-31"             # None = one complete year from start
 FORECAST_PREFECTURE = None
 FORECAST_TOWN = None
 FORECAST_BATCH_SIZE = 256
@@ -1098,7 +1098,7 @@ if RUN_EVALUATION:
 # %% [markdown] — original cell 22
 # ## 11. Forecast with the model selected on validation
 #
-# The default forecast covers 2026-02-01 through 2027-01-31. Both models are compared historically; the selected model produces the future CSV with all 37 physical attributes. To forecast with a particular architecture, run that architecture alone using `MODEL_CHOICE`. A short historical test does not establish annual forecast accuracy.
+# The default forecast covers 2026-02-01 through 2027-12-31. Both models are compared historically; the selected model produces the future CSV with all 37 physical attributes. To forecast with a particular architecture, run that architecture alone using `MODEL_CHOICE`. A short historical test does not establish annual forecast accuracy.
 
 # %% — original code cell 23
 if RUN_FORECAST:

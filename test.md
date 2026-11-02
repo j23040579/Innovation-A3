@@ -274,7 +274,7 @@ Expected status: `200 OK`
 The current forecast dataset covers dates within:
 
 ```text
-2026-02-01 to 2027-01-31
+2026-02-01 to 2027-12-31
 ```
 
 ### 10.5 Get daily weather
