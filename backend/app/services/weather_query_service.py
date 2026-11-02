@@ -8,6 +8,35 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
+def _json_safe_weather_record(data_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Round numeric fields so the UI does not show binary float noise."""
+    cleaned: Dict[str, Any] = {}
+    for key, value in data_dict.items():
+        if isinstance(value, (np.floating, float)):
+            cleaned[key] = None if pd.isna(value) else round(float(value), 2)
+        elif isinstance(value, (np.integer,)):
+            cleaned[key] = int(value)
+        else:
+            cleaned[key] = value
+    return cleaned
+
+
+def canonicalize_prefecture(name: str) -> str:
+    """
+    Map merged dataset labels onto the 47 prefecture names the frontend uses.
+
+    The Final forecast CSV splits Hokkaido into subprefectures (Hokkaido-Ishikari,
+    Hokkaido-_Kushiro, …) and leaves a few prefectures lowercase (mie, nara).
+    """
+    cleaned = str(name or "").strip().replace("_", "")
+    if not cleaned:
+        return cleaned
+    if cleaned.lower().startswith("hokkaido"):
+        return "Hokkaido"
+    return cleaned[0].upper() + cleaned[1:].lower()
+
+
 class WeatherQueryService:
     """
     Backend 1 Core Query Engine.
@@ -67,10 +96,11 @@ class WeatherQueryService:
                 f"Weather dataset {self.dataset_path} contains invalid values in the 'date' column"
             ) from exc
 
-        # Standardize prefecture column casing (capitalize first letter, e.g. 'mie' -> 'Mie')
-        df["prefecture"] = df["prefecture"].astype(str).str.strip().str.capitalize()
+        # Collapse Hokkaido subprefectures and fix mixed-case labels from the merged CSV.
+        df["prefecture"] = df["prefecture"].map(canonicalize_prefecture)
         if "town" in df.columns:
             df["town"] = df["town"].astype(str).str.strip()
+            df = df.drop_duplicates(subset=["prefecture", "town", "date"], keep="first")
 
         # Cache min/max dates
         self._min_date = str(df["date"].min())
@@ -117,7 +147,7 @@ class WeatherQueryService:
         If town is given, selects that exact town.
         If town is omitted, returns the mean metrics across all towns in that prefecture.
         """
-        norm_pref = prefecture.strip().capitalize()
+        norm_pref = canonicalize_prefecture(prefecture)
         try:
             records = self._indexed_df.loc[(norm_pref, date)]
         except KeyError:
@@ -127,7 +157,7 @@ class WeatherQueryService:
             # Single town in prefecture
             data_dict = records.to_dict()
             data_dict["is_prefecture_average"] = False
-            return data_dict
+            return _json_safe_weather_record(data_dict)
 
         # Multiple towns exist
         if town:
@@ -136,7 +166,7 @@ class WeatherQueryService:
             if not town_matches.empty:
                 data_dict = town_matches.iloc[0].to_dict()
                 data_dict["is_prefecture_average"] = False
-                return data_dict
+                return _json_safe_weather_record(data_dict)
 
         # Return mean of numerical columns as representative prefecture value
         numeric_cols = records.select_dtypes(include=[np.number]).columns
@@ -146,7 +176,7 @@ class WeatherQueryService:
         data_dict["date"] = date
         data_dict["town"] = None
         data_dict["is_prefecture_average"] = True
-        return data_dict
+        return _json_safe_weather_record(data_dict)
 
     def get_timeseries(
         self,
@@ -158,7 +188,7 @@ class WeatherQueryService:
         """
         Returns a time series for D3.js line/bar charts within [start_date, end_date].
         """
-        norm_pref = prefecture.strip().capitalize()
+        norm_pref = canonicalize_prefecture(prefecture)
         mask = (
             (self.df["prefecture"] == norm_pref)
             & (self.df["date"] >= start_date)
@@ -245,7 +275,7 @@ class WeatherQueryService:
         Helper for Backend 2: fetches the last N days leading up to target_date.
         Crucial for Flood model which requires 3-day and 7-day rolling sums and discharge means.
         """
-        norm_pref = prefecture.strip().capitalize()
+        norm_pref = canonicalize_prefecture(prefecture)
         target_dt = pd.to_datetime(target_date)
         start_dt = target_dt - pd.Timedelta(days=days_lookback)
         start_str = start_dt.strftime("%Y-%m-%d")

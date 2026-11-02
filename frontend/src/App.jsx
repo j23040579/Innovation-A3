@@ -7,11 +7,37 @@ import "./legacy/kikan.css";
 
 const riskColors = {
   low: { className: "risk-low", color: "#FED7AA" },
+  mild: { className: "risk-low", color: "#FED7AA" },
   moderate: { className: "risk-medium", color: "#F59E0B" },
   medium: { className: "risk-medium", color: "#F59E0B" },
+  cold: { className: "risk-medium", color: "#38BDF8" },
+  "light freeze": { className: "risk-medium", color: "#7DD3FC" },
+  "hard freeze": { className: "risk-high", color: "#0284C7" },
+  "severe cold": { className: "risk-high", color: "#0369A1" },
+  frozen: { className: "risk-high", color: "#0C4A6E" },
+  warm: { className: "risk-medium", color: "#F59E0B" },
   high: { className: "risk-high", color: "#C2410C" },
   critical: { className: "risk-high", color: "#9A3412" },
 };
+
+function classifyTemperature(tempC) {
+  const value = Number(tempC);
+  if (!Number.isFinite(value)) return "Unknown";
+  if (value <= -18) return "Frozen";
+  if (value <= -5) return "Severe Cold";
+  if (value < -2.2) return "Hard Freeze";
+  if (value <= 0) return "Light Freeze";
+  if (value <= 16) return "Cold";
+  if (value < 27) return "Mild";
+  return "Warm";
+}
+
+function formatTemperature(tempC, status) {
+  const value = Number(tempC);
+  if (!Number.isFinite(value)) return "—";
+  const label = status && status !== "Unknown" ? status : classifyTemperature(value);
+  return `${value.toFixed(2)}°C (${label})`;
+}
 
 function riskStyle(level) {
   return riskColors[String(level || "unknown").toLowerCase()] || {
@@ -43,7 +69,10 @@ function renderRisks(risks = []) {
     name.textContent = risk.hazard || "Unknown hazard";
     const level = document.createElement("span");
     level.className = `hazard-level ${style.className}`;
-    level.textContent = risk.risk_level || "Unknown";
+    level.textContent =
+      risk.hazard === "temperature" && risk.predicted_value != null
+        ? formatTemperature(risk.predicted_value, risk.risk_level)
+        : risk.risk_level || "Unknown";
     top.append(name, level);
     const track = document.createElement("div");
     track.className = "bar-track";
@@ -146,8 +175,13 @@ async function initializeApiIntegration() {
         ]);
         renderRisks(prediction.risks);
         renderTimeseries(timeseries.series);
-        const temperature = daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
-        if (temperature !== undefined) document.getElementById("stat-temp").textContent = `${temperature}°C`;
+        const tempRisk = prediction.risks?.find((risk) => risk.hazard === "temperature");
+        const temperature =
+          tempRisk?.predicted_value ?? daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
+        const tempEl = document.getElementById("stat-temp");
+        if (temperature !== undefined && tempEl) {
+          tempEl.textContent = formatTemperature(temperature, tempRisk?.risk_level);
+        }
         const locationSummary = document.getElementById("mon-loc");
         if (locationSummary) {
           locationSummary.replaceChildren("Monitoring live weather for ", Object.assign(document.createElement("strong"), { textContent: prefecture }));

@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter, Query, HTTPException
 from app.schemas.weather import DailyWeatherResponse, TimeSeriesResponse, MapOverviewResponse, MapOverviewItem
-from app.services.weather_query_service import weather_service
+from app.services.weather_query_service import weather_service, canonicalize_prefecture
 
 router = APIRouter(prefix="/weather", tags=["Weather Data"])
 
@@ -28,7 +28,7 @@ def get_daily_weather(
     clean_metrics = {k: v for k, v in weather.items() if k not in ["prefecture", "date", "town", "is_prefecture_average"]}
 
     return DailyWeatherResponse(
-        prefecture=prefecture.capitalize(),
+        prefecture=canonicalize_prefecture(prefecture),
         town=town,
         date=date,
         is_prefecture_average=is_avg,
@@ -58,7 +58,7 @@ def get_weather_timeseries(
         )
 
     return TimeSeriesResponse(
-        prefecture=prefecture.capitalize(),
+        prefecture=canonicalize_prefecture(prefecture),
         town=town,
         start_date=start_date,
         end_date=end_date,

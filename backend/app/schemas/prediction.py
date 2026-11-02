@@ -13,7 +13,7 @@ class PredictionRequest(BaseModel):
 class HazardRiskResult(BaseModel):
     hazard: str = Field(..., description="Disaster name, e.g. 'flood', 'rain', 'typhoon'")
     model_name: str = Field(..., description="Name of the model used for inference")
-    risk_level: str = Field(..., description="Categorical risk: 'Low', 'Medium', 'High', 'Critical'")
+    risk_level: str = Field(..., description="Hazard class or temperature status (e.g. Cold, Warm, Light Freeze)")
     probability: Optional[float] = Field(None, description="Class probability between 0.0 and 1.0 (if classification)")
     predicted_value: Optional[float] = Field(None, description="Continuous predicted quantity (if regression, e.g. max temp °C)")
     unit: Optional[str] = Field(None, description="Measurement unit, e.g. '°C', 'km/h', 'probability'")

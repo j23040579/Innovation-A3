@@ -31,6 +31,23 @@ const MAP_HAZARD_META = [
   {key:'snow', label:'Heavy snow'}
 ];
 
+function classifyTemperature(tempC){
+  const value = Number(tempC);
+  if(!Number.isFinite(value)) return 'Unknown';
+  if(value <= -18) return 'Frozen';
+  if(value <= -5) return 'Severe Cold';
+  if(value < -2.2) return 'Hard Freeze';
+  if(value <= 0) return 'Light Freeze';
+  if(value <= 16) return 'Cold';
+  if(value < 27) return 'Mild';
+  return 'Warm';
+}
+function formatTemperature(tempC){
+  const value = Number(tempC);
+  if(!Number.isFinite(value)) return '—';
+  return value.toFixed(2) + '\\u00b0C (' + classifyTemperature(value) + ')';
+}
+
 function levelFor(pct){
   if(pct < 25) return {cls:'lvl-low', label:'Low', color:'#22C55E'};
   if(pct < 45) return {cls:'lvl-medium', label:'Medium', color:'#F59E0B'};
@@ -370,7 +387,7 @@ function selectPref(id, options = {}){
   document.getElementById('loc-input').value = p.name;
 
   document.getElementById('mon-loc').innerHTML = \`Monitoring temperature for <strong>\${p.name}</strong>\`;
-  document.getElementById('stat-temp').textContent = clim.temp;
+  document.getElementById('stat-temp').textContent = formatTemperature(parseFloat(clim.temp));
 
 
 

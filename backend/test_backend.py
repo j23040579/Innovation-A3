@@ -45,6 +45,11 @@ def run_tests():
         w = res.json()
         print(f"  Passed! Tokyo 2026-06-15 max temp: {w['metrics'].get('temperature_2m_max')}°C, rain: {w['metrics'].get('rain_sum')}mm")
 
+        hokkaido = client.get("/api/weather/daily?prefecture=Hokkaido&date=2026-02-01")
+        assert hokkaido.status_code == 200, f"Hokkaido lookup failed: {hokkaido.status_code} {hokkaido.text}"
+        mie = client.get("/api/weather/daily?prefecture=Mie&date=2026-02-01")
+        assert mie.status_code == 200, f"Mie lookup failed: {mie.status_code} {mie.text}"
+
         # Test 5: Time Series Query for D3 Charts
         print("\n[5/7] Testing GET /api/weather/timeseries ...")
         res = client.get("/api/weather/timeseries?prefecture=Tokyo&start_date=2026-06-01&end_date=2026-06-10")

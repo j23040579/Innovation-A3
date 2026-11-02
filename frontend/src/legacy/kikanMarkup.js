@@ -78,7 +78,7 @@ export const kikanMarkup = `<header class="topnav">
       </div>
     </div>
     <div class="temperature-stat-row">
-      <div class="stat temperature-only"><div class="v" id="stat-temp">16°C</div><div class="l">Temperature</div></div>
+      <div class="stat temperature-only"><div class="v" id="stat-temp">16.00°C (Cold)</div><div class="l">Temperature</div></div>
     </div>
     <p class="monitor-summary" id="monitor-risk-summary" role="status" aria-live="polite">Prototype risk summary: check the hazard breakdown below. These values are not live forecasts.</p>
   </div>
@@ -107,6 +107,15 @@ export const kikanMarkup = `<header class="topnav">
 <div class="map-shell">
 <div class="map-pane">
 <div class="map-hazard-control"><label for="map-hazard-select">Show map by disaster</label><select id="map-hazard-select" aria-label="Choose disaster type for map shading"><option value="typhoon">Typhoon</option><option value="rain">Heavy rain</option><option value="flood">Flood</option><option value="thunder">Thunderstorm</option><option value="snow">Heavy snow (Niigata &amp; Yamagata only)</option></select></div>
+<aside class="map-legend" id="map-legend" aria-label="Map colour legend">
+  <strong id="map-legend-title">Typhoon risk</strong>
+  <ul class="map-legend-list">
+    <li><span class="legend-swatch low" aria-hidden="true"></span> Low</li>
+    <li><span class="legend-swatch medium" aria-hidden="true"></span> Medium</li>
+    <li><span class="legend-swatch high" aria-hidden="true"></span> High</li>
+    <li><span class="legend-swatch selected" aria-hidden="true"></span> Selected</li>
+  </ul>
+</aside>
 <svg aria-label="Map of Japan with 47 clickable prefectures" id="japan-svg" role="img" viewbox="0 0 438 516">
 <g id="zoom-g">
 <g id="map-g">

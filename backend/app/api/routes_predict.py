@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
 from app.schemas.prediction import PredictionRequest, PredictionResponse
-from app.services.weather_query_service import weather_service
+from app.services.weather_query_service import weather_service, canonicalize_prefecture
 from app.services.inference_service import inference_service
 
 router = APIRouter(prefix="/predict", tags=["Disaster Prediction"])
@@ -38,7 +38,7 @@ def predict_disaster_risks(request: PredictionRequest):
 
     # 2. Run inference engine (or mock fallback if Backend 2 is not yet plugged in)
     prediction_result = inference_service.run_predictions(
-        prefecture=request.prefecture.capitalize(),
+        prefecture=canonicalize_prefecture(request.prefecture),
         date=request.date,
         weather_features=weather_dict,
         requested_hazards=request.hazards,
