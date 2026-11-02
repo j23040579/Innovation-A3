@@ -4,6 +4,11 @@ import { kikanMarkup } from "./legacy/kikanMarkup";
 import { kikanLegacy } from "./legacy/kikanLegacy";
 import { api } from "./api";
 import { getTomorrowISODate, resolveForecastPeriod } from "./forecastPeriod";
+import {
+  FORECAST_LOADING_SELECTOR,
+  MAP_LOADING_SELECTOR,
+  setForecastLoading,
+} from "./forecastLoading";
 import "./legacy/kikan.css";
 
 const riskColors = {
@@ -217,12 +222,16 @@ async function loadMapOverview(date, isCurrent = () => true) {
   window.updateKikanRainMapData?.(items);
 }
 
-async function initializeApiIntegration() {
+async function initializeApiIntegration(root) {
   const checkButton = document.getElementById("check-risk-btn");
   let appliedPeriod = null;
   let selectionRevision = 0;
   const initializationRevision = selectionRevision;
   const isCurrentSelection = (revision) => revision === selectionRevision;
+  const setSelectionLoading = (isLoading) =>
+    setForecastLoading(root.querySelectorAll(FORECAST_LOADING_SELECTOR), isLoading);
+  const setMapLoading = (isLoading) =>
+    setForecastLoading(root.querySelectorAll(MAP_LOADING_SELECTOR), isLoading);
 
   async function loadSelectionData(prefecture, period, revision) {
     const { startDate, endDate } = period;
@@ -263,11 +272,14 @@ async function initializeApiIntegration() {
   window.onKikanMapPrefectureSelect = (prefecture) => {
     const revision = ++selectionRevision;
     const period = resolveForecastPeriod(appliedPeriod, getTomorrowISODate());
+    setSelectionLoading(true);
     setStatus(`Loading live weather and risk data for ${prefecture}…`);
     loadSelectionData(prefecture, period, revision).catch((error) => {
       if (isCurrentSelection(revision)) {
         setStatus(`Unable to load backend data: ${error.message}`, true);
       }
+    }).finally(() => {
+      if (isCurrentSelection(revision)) setSelectionLoading(false);
     });
   };
 
@@ -285,10 +297,11 @@ async function initializeApiIntegration() {
       if (!validatedPeriod) return;
       const period = { from: validatedPeriod.from, to: validatedPeriod.to };
       appliedPeriod = period;
-      window.applyKikanRiskContext?.(prefecture, validatedPeriod);
-      window.updateKikanRiskMapSelection?.({ prefecture });
       const revision = ++selectionRevision;
       checkButton.disabled = true;
+      setSelectionLoading(true);
+      window.applyKikanRiskContext?.(prefecture, validatedPeriod);
+      window.updateKikanRiskMapSelection?.({ prefecture });
       setStatus(`Loading live weather and risk data for ${prefecture}…`);
       try {
         await loadSelectionData(
@@ -302,6 +315,7 @@ async function initializeApiIntegration() {
         }
       } finally {
         checkButton.disabled = false;
+        if (isCurrentSelection(revision)) setSelectionLoading(false);
       }
     },
     true,
@@ -328,10 +342,15 @@ async function initializeApiIntegration() {
       input.max = dateRange.max_date;
       if (!input.value) input.value = dateRange.min_date;
     });
-    await loadMapOverview(
-      document.getElementById("to-date")?.value || dateRange.min_date,
-      () => isCurrentSelection(initializationRevision),
-    );
+    setMapLoading(true);
+    try {
+      await loadMapOverview(
+        document.getElementById("to-date")?.value || dateRange.min_date,
+        () => isCurrentSelection(initializationRevision),
+      );
+    } finally {
+      if (isCurrentSelection(initializationRevision)) setMapLoading(false);
+    }
   } catch (error) {
     if (isCurrentSelection(initializationRevision)) {
       setStatus(`Backend metadata or map data unavailable: ${error.message}`, true);
@@ -347,7 +366,7 @@ export default function App() {
     rootRef.current.innerHTML = kikanMarkup;
     window.d3 = d3;
     new Function(kikanLegacy)();
-    initializeApiIntegration().catch((error) => {
+    initializeApiIntegration(rootRef.current).catch((error) => {
       setStatus(`Backend connection unavailable: ${error.message}`, true);
     });
   }, []);
