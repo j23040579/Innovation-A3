@@ -62,11 +62,6 @@ function renderRisks(risks = []) {
   risks.forEach((risk) => {
     const style = riskStyle(risk.risk_level);
     const profileProbabilities = risk.profile_match_probabilities;
-    const profileMatchProbability = profileProbabilities
-      ? Math.max(0, ...Object.values(profileProbabilities).map(Number).filter(Number.isFinite))
-      : null;
-    const probability = risk.probability ?? profileMatchProbability ?? 0;
-    const percentage = Math.max(0, Math.min(100, Number(probability) * 100));
     const card = document.createElement("div");
     card.className = "card hazard";
     const top = document.createElement("div");
@@ -81,24 +76,14 @@ function renderRisks(risks = []) {
         ? formatTemperature(risk.predicted_value, risk.risk_level)
         : risk.risk_level || "Unknown";
     top.append(name, level);
-    const track = document.createElement("div");
-    track.className = "bar-track";
-    if (profileProbabilities) {
-      track.setAttribute("aria-label", "Landfall weather profile match, not typhoon occurrence probability");
-    }
-    const fill = document.createElement("div");
-    fill.className = "bar-fill";
-    fill.style.width = `${percentage}%`;
-    fill.style.background = style.color;
-    track.appendChild(fill);
     const message = document.createElement("small");
     message.textContent = risk.alert_message || "Live backend prediction";
     if (profileProbabilities) {
       const profileLabel = document.createElement("small");
       profileLabel.textContent = "Landfall profile match (not typhoon occurrence probability)";
-      card.append(top, profileLabel, track, message);
+      card.append(top, profileLabel, message);
     } else {
-      card.append(top, track, message);
+      card.append(top, message);
     }
     grid.appendChild(card);
   });
