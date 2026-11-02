@@ -52,3 +52,16 @@ test("forecast updates clear loading attributes after completion", () => {
     assert.equal(element.attributes.has("data-forecast-loading"), false);
   }
 });
+
+test("refresh feedback is a pulse animation and respects reduced motion", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const stylesheet = await readFile(
+    new URL("./legacy/kikan.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(stylesheet, /@keyframes forecast-refresh-pulse/);
+  assert.match(stylesheet, /animation:forecast-refresh-pulse 1\.4s ease-in-out infinite/);
+  assert.match(stylesheet, /@media\(prefers-reduced-motion:reduce\)/);
+  assert.doesNotMatch(stylesheet, /content:\s*["'](?:Loading|Updating)/i);
+});
