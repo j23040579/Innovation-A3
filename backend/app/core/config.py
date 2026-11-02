@@ -6,9 +6,15 @@ from typing import List
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 PROJECT_ROOT = BACKEND_DIR.parent if (BACKEND_DIR.parent / "Future Weather Attributes").exists() else BACKEND_DIR
 
-# Default to baseline_v1 forecast dataset, fallback to alternatives if needed
-DEFAULT_DATASET_REL_PATH = Path("Future Weather Attributes") / "Forecast" / "baseline_v1" / "future_daily_weather_attributes.csv"
-DATASET_PATH = Path(os.getenv("WEATHER_DATASET_PATH", PROJECT_ROOT / DEFAULT_DATASET_REL_PATH)).resolve()
+# Default to the consolidated forecast dataset. Relative overrides are resolved
+# from the repository root rather than the process working directory.
+DEFAULT_DATASET_REL_PATH = Path("Future Weather Attributes") / "Forecast" / "Final" / "future_daily_weather_attributes.csv"
+_dataset_override = os.getenv("WEATHER_DATASET_PATH")
+DATASET_PATH = (
+    (Path(_dataset_override) if Path(_dataset_override).is_absolute() else PROJECT_ROOT / _dataset_override).resolve()
+    if _dataset_override
+    else (PROJECT_ROOT / DEFAULT_DATASET_REL_PATH).resolve()
+)
 
 class Settings:
     PROJECT_NAME: str = "Japan Disaster & Weather Intelligence API"

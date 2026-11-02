@@ -33,6 +33,9 @@ def run_tests():
         res = client.get("/api/metadata/date-range")
         assert res.status_code == 200, f"Expected 200, got {res.status_code}"
         dr = res.json()
+        assert dr["min_date"] == "2026-02-01", f"Unexpected minimum date: {dr['min_date']}"
+        assert dr["max_date"] == "2027-12-31", f"Unexpected maximum date: {dr['max_date']}"
+        assert dr["total_days"] == 699, f"Unexpected total days: {dr['total_days']}"
         print(f"  Passed! Date bounds: {dr['min_date']} to {dr['max_date']} ({dr['total_days']} total days)")
 
         # Test 4: Single-day Weather Query

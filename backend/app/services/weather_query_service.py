@@ -30,8 +30,9 @@ class WeatherQueryService:
             return
 
         if not self.dataset_path.exists():
-            # Check alternative forecast directories if the baseline_v1 path doesn't exist
+            # Keep compatibility with older checkouts while preferring the consolidated file.
             alt_candidates = [
+                settings.PROJECT_ROOT_DIR / "Future Weather Attributes" / "Forecast" / "Final" / "future_daily_weather_attributes.csv",
                 settings.PROJECT_ROOT_DIR / "Future Weather Attributes" / "Forecast" / "baseline_v1" / "future_daily_weather_attributes.csv",
                 settings.PROJECT_ROOT_DIR / "Future Weather Attributes" / "Forecast" / "60lookback" / "future_daily_weather_attributes.csv",
                 settings.PROJECT_ROOT_DIR / "Future Weather Attributes" / "Forecast" / "lstm_gru_all_attributes" / "future_daily_weather_attributes.csv",
@@ -45,14 +46,26 @@ class WeatherQueryService:
             if not found:
                 raise FileNotFoundError(
                     f"Weather dataset could not be found at {self.dataset_path}. "
-                    f"Please verify 'Future Weather Attributes/Forecast/'."
+                    "Set WEATHER_DATASET_PATH to an absolute path or a path relative to the repository root."
                 )
 
         logger.info(f"Loading future weather dataset from: {self.dataset_path}")
         df = pd.read_csv(self.dataset_path)
 
         # Standardize date format to 'YYYY-MM-DD' string
-        df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
+        required_columns = {"prefecture", "date"}
+        missing_columns = required_columns - set(df.columns)
+        if missing_columns:
+            missing = ", ".join(sorted(missing_columns))
+            raise ValueError(
+                f"Weather dataset {self.dataset_path} is missing required column(s): {missing}"
+            )
+        try:
+            df["date"] = pd.to_datetime(df["date"], errors="raise").dt.strftime("%Y-%m-%d")
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Weather dataset {self.dataset_path} contains invalid values in the 'date' column"
+            ) from exc
 
         # Standardize prefecture column casing (capitalize first letter, e.g. 'mie' -> 'Mie')
         df["prefecture"] = df["prefecture"].astype(str).str.strip().str.capitalize()

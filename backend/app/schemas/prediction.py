@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class PredictionRequest(BaseModel):
     prefecture: str = Field(..., description="Japan prefecture name, e.g. 'Tokyo', 'Niigata'")
-    date: str = Field(..., description="Target date in 'YYYY-MM-DD' format (within 2026-02-01 to 2027-01-31)")
+    date: str = Field(..., description="Target date in 'YYYY-MM-DD' format within the forecast range returned by /api/metadata/date-range")
     town: Optional[str] = Field(None, description="Optional specific town. If omitted, uses prefecture average.")
     hazards: Optional[List[str]] = Field(
         None, 
