@@ -49,9 +49,9 @@ function formatTemperature(tempC){
 }
 
 function levelFor(pct){
-  if(pct < 25) return {cls:'lvl-low', label:'Low', color:'#22C55E'};
-  if(pct < 45) return {cls:'lvl-medium', label:'Medium', color:'#F59E0B'};
-  return {cls:'lvl-high', label:'High', color:'#EF4444'};
+  if(pct < 25) return {cls:'lvl-low', label:'Low'};
+  if(pct < 45) return {cls:'lvl-medium', label:'Medium'};
+  return {cls:'lvl-high', label:'High'};
 }
 
 function hashStr(str){
@@ -427,8 +427,7 @@ function selectPref(id, options = {}){
   const grid = document.getElementById('hazard-grid');
   grid.innerHTML = '';
   HAZARD_META.filter(h=>h.key !== 'snow' || SNOW_MODEL_PREFECTURES.has(id)).forEach(h=>{
-    const pct = scores[h.key];
-    const l = levelFor(pct);
+    const l = levelFor(scores[h.key]);
     const el = document.createElement('div');
     el.className = 'card hazard';
     el.innerHTML = \`
@@ -436,7 +435,6 @@ function selectPref(id, options = {}){
         <span class="hazard-name">\${h.icon} \${h.label}</span>
         <span class="hazard-level \${l.cls}">\${l.label}</span>
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:\${pct}%; background:\${l.color}"></div></div>
     \`;
     grid.appendChild(el);
   });

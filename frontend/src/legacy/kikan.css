@@ -245,8 +245,6 @@
   .hazard-level{ font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px; }
   .lvl-low{ background:var(--teal-soft); color:#7FCFCF; }
   .lvl-high{ background:var(--red-soft); color:#E88A76; }
-  .bar-track{ height:6px; border-radius:4px; background:var(--paper-line); overflow:hidden; }
-  .bar-fill{ height:100%; border-radius:4px; transition:width .6s ease; }
   .hazard-pct{ font-size:12px; color:var(--text-lo); }
   .hazard-grade{ font-size:12px; font-weight:700; margin-top:2px; }
   .hazard-grade-wind{ font-weight:500; color:var(--text-lo); }
