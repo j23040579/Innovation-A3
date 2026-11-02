@@ -30,6 +30,12 @@ class InferenceService:
             self._backend2_ready = False
             logger.info("Running with Backend 1 mock inference engine.")
 
+    @property
+    def snow_supported_prefectures(self) -> List[str]:
+        if not self._backend2_ready or not self._model_registry:
+            return []
+        return self._model_registry.snow_supported_prefectures
+
     def run_predictions(
         self,
         prefecture: str,

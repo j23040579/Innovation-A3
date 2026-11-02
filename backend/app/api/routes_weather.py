@@ -20,8 +20,8 @@ def get_daily_weather(
     if not weather:
         raise HTTPException(
             status_code=404,
-            detail=f"No weather records found for prefecture '{prefecture}' on date '{date}'. "
-                   f"Please verify spelling and ensure date falls within the valid date range."
+            detail=f"No forecast weather record is available for prefecture '{prefecture}' "
+                   f"on date '{date}'. The configured forecast dataset does not contain this prefecture/date."
         )
 
     is_avg = weather.get("is_prefecture_average", False)

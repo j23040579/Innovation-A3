@@ -20,7 +20,6 @@ const riskColors = {
   critical: { className: "risk-high", color: "#9A3412" },
   unassessed: { className: "risk-unassessed", color: "var(--ink-soft)" },
 };
-const snowMapPrefectures = ["Niigata", "Yamagata"];
 const normalizePrefecture = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 function classifyTemperature(tempC) {
@@ -170,23 +169,27 @@ function applyMapOverview(items = []) {
 }
 
 async function loadMapOverview(date) {
-  const map = await api.getMapOverview(date);
-  const availableSnowPrefectures = map.items
+  const [map, snowCoverage] = await Promise.all([api.getMapOverview(date), api.getSnowCoverage()]);
+  const coverage = new Set(snowCoverage.map(normalizePrefecture));
+  const supportedSnowPrefectures = map.items
     .map((item) => item.prefecture)
-    .filter((prefecture) =>
-      snowMapPrefectures.some((candidate) => normalizePrefecture(candidate) === normalizePrefecture(prefecture)),
-    );
+    .filter((prefecture) => coverage.has(normalizePrefecture(prefecture)));
   const snowPredictions = await Promise.all(
-    availableSnowPrefectures.map(async (prefecture) => {
-      const prediction = await api.predict({ prefecture, date, hazards: ["snow"] });
-      const snowRisk = prediction.risks?.find((risk) => risk.hazard === "snow");
-      return [
-        normalizePrefecture(prefecture),
-        {
-          execution_mode: prediction.execution_mode,
-          risk_level: snowRisk?.risk_level,
-        },
-      ];
+    supportedSnowPrefectures.map(async (prefecture) => {
+      try {
+        const prediction = await api.predict({ prefecture, date, hazards: ["snow"] });
+        const snowRisk = prediction.risks?.find((risk) => risk.hazard === "snow");
+        return [
+          normalizePrefecture(prefecture),
+          {
+            execution_mode: prediction.execution_mode,
+            risk_level: snowRisk?.risk_level,
+          },
+        ];
+      } catch (error) {
+        if (error.status === 404) return [normalizePrefecture(prefecture), null];
+        throw error;
+      }
     }),
   );
   const snowByPrefecture = new Map(snowPredictions);
@@ -212,6 +215,7 @@ async function initializeApiIntegration() {
         setStatus("Choose a prefecture and a valid date range.", true);
         return;
       }
+      window.updateKikanRiskMapSelection?.({ prefecture });
       checkButton.disabled = true;
       setStatus("Loading live weather and risk data…");
       try {
@@ -236,7 +240,13 @@ async function initializeApiIntegration() {
         document.getElementById("map-summary-name").textContent = prefecture;
         document.getElementById("map-summary-hazard").textContent = prediction.overall_risk_level || "Unknown";
         setStatus(`Live backend data loaded for ${prefecture} (${prediction.execution_mode || "backend"} mode).`);
-        await loadMapOverview(endDate);
+        const selectedPrefecture = prediction.prefecture || prefecture;
+        const selectedDate = prediction.date || endDate;
+        await loadMapOverview(selectedDate);
+        window.updateKikanRiskMapSelection?.({
+          prefecture: selectedPrefecture,
+          riskLevel: prediction.overall_risk_level,
+        });
       } catch (error) {
         setStatus(`Unable to load backend data: ${error.message}`, true);
       } finally {
