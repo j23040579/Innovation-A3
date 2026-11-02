@@ -7,6 +7,9 @@ import "./legacy/kikan.css";
 
 const riskColors = {
   low: { className: "risk-low", color: "#FED7AA" },
+  "no/minimal rain": { className: "risk-low", color: "#FED7AA" },
+  "no rain": { className: "risk-low", color: "#FED7AA" },
+  none: { className: "risk-low", color: "#FED7AA" },
   mild: { className: "risk-low", color: "#FED7AA" },
   moderate: { className: "risk-medium", color: "#F59E0B" },
   medium: { className: "risk-medium", color: "#F59E0B" },
@@ -159,31 +162,55 @@ async function loadMapOverview(date) {
   const supportedSnowPrefectures = map.items
     .map((item) => item.prefecture)
     .filter((prefecture) => coverage.has(normalizePrefecture(prefecture)));
-  const snowPredictions = await Promise.all(
-    supportedSnowPrefectures.map(async (prefecture) => {
-      try {
-        const prediction = await api.predict({ prefecture, date, hazards: ["snow"] });
-        const snowRisk = prediction.risks?.find((risk) => risk.hazard === "snow");
-        return [
-          normalizePrefecture(prefecture),
-          {
-            execution_mode: prediction.execution_mode,
-            risk_level: snowRisk?.risk_level,
-          },
-        ];
-      } catch (error) {
-        if (error.status === 404) return [normalizePrefecture(prefecture), null];
-        throw error;
-      }
-    }),
-  );
+  const [snowPredictions, rainPredictions] = await Promise.all([
+    Promise.all(
+      supportedSnowPrefectures.map(async (prefecture) => {
+        try {
+          const prediction = await api.predict({ prefecture, date, hazards: ["snow"] });
+          const snowRisk = prediction.risks?.find((risk) => risk.hazard === "snow");
+          return [
+            normalizePrefecture(prefecture),
+            {
+              execution_mode: prediction.execution_mode,
+              risk_level: snowRisk?.risk_level,
+            },
+          ];
+        } catch (error) {
+          if (error.status === 404) return [normalizePrefecture(prefecture), null];
+          throw error;
+        }
+      }),
+    ),
+    Promise.all(
+      map.items.map(async ({ prefecture }) => {
+        try {
+          const prediction = await api.predict({ prefecture, date, hazards: ["rain"] });
+          const rainRisk = prediction.risks?.find((risk) => risk.hazard === "rain");
+          return [
+            normalizePrefecture(prefecture),
+            {
+              execution_mode: prediction.execution_mode,
+              risk_level: rainRisk?.risk_level,
+              predicted_value: rainRisk?.predicted_value,
+              unit: rainRisk?.unit,
+            },
+          ];
+        } catch (error) {
+          if (error.status === 404) return [normalizePrefecture(prefecture), null];
+          throw error;
+        }
+      }),
+    ),
+  ]);
   const snowByPrefecture = new Map(snowPredictions);
-  applyMapOverview(
-    map.items.map((item) => ({
-      ...item,
-      snow_prediction: snowByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
-    })),
-  );
+  const rainByPrefecture = new Map(rainPredictions);
+  const items = map.items.map((item) => ({
+    ...item,
+    snow_prediction: snowByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
+    rain_prediction: rainByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
+  }));
+  applyMapOverview(items);
+  window.updateKikanRainMapData?.(items);
 }
 
 async function initializeApiIntegration() {
