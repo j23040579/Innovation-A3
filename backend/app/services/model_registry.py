@@ -99,6 +99,27 @@ class ModelRegistry:
         probabilities = np.asarray(model.predict_proba(model_input), dtype=float)
         return float(np.max(probabilities[0]))
 
+    @staticmethod
+    def _typhoon_risk_level(probabilities: Any, classes: Any) -> str:
+        """Translate the typhoon profile posterior into an uncertainty-aware level.
+
+        The typhoon artifact was trained on confirmed-landfall weather profiles,
+        so its class is a profile match rather than a calibrated occurrence alert.
+        Requiring posterior support for the selected profile prevents a small
+        argmax margin from turning every out-of-domain forecast into High.
+        """
+        posterior = {
+            str(label): float(probability)
+            for label, probability in zip(classes, np.asarray(probabilities, dtype=float))
+        }
+        high_probability = posterior.get("High", 0.0)
+        medium_probability = posterior.get("Medium", 0.0)
+        if high_probability >= 0.90:
+            return "High"
+        if high_probability >= 0.75 or medium_probability >= 0.45:
+            return "Medium"
+        return "Low"
+
     def load_all_models(self) -> None:
         """
         Loads the best performing models for each hazard from the project folders,
@@ -253,15 +274,34 @@ class ModelRegistry:
         elif hazard == "typhoon":
             df_in = self._model_input(hazard, weather_data)
             pred = model.predict(df_in)[0]
-            prob = self._probability(model, df_in)
+            probabilities = np.asarray(model.predict_proba(df_in)[0], dtype=float) if hasattr(model, "predict_proba") else None
+            prob = float(np.max(probabilities)) if probabilities is not None else None
+            risk_level = (
+                self._typhoon_risk_level(probabilities, model.classes_)
+                if probabilities is not None
+                else str(pred)
+            )
+            profile_probabilities = (
+                {
+                    str(label).lower(): round(float(value), 3)
+                    for label, value in zip(model.classes_, probabilities)
+                }
+                if probabilities is not None
+                else {}
+            )
             return HazardRiskResult(
                 hazard="typhoon",
                 model_name=self.model_names.get("typhoon", "Random Forest Pipeline (Typhoon)"),
-                risk_level=str(pred),
+                risk_level=risk_level,
                 probability=round(prob, 3) if prob is not None else None,
                 unit="profile_class",
-                threshold_exceeded=str(pred) in ["Medium", "High"],
-                alert_message="Typhoon wind/pressure signature detected" if str(pred) in ["Medium", "High"] else "No typhoon threat"
+                threshold_exceeded=risk_level in ["Medium", "High"],
+                alert_message="Typhoon wind/pressure signature detected" if risk_level in ["Medium", "High"] else "No typhoon profile match",
+                contributing_factors={
+                    "profile_high_probability": profile_probabilities.get("high", 0.0),
+                    "profile_medium_probability": profile_probabilities.get("medium", 0.0),
+                    "profile_low_probability": profile_probabilities.get("low", 0.0),
+                },
             )
 
         raise NotImplementedError(f"Prediction logic for {hazard} is not yet implemented.")
