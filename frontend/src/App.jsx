@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import { kikanMarkup } from "./legacy/kikanMarkup";
 import { kikanLegacy } from "./legacy/kikanLegacy";
 import { api } from "./api";
+import { getTomorrowISODate, resolveForecastPeriod } from "./forecastPeriod";
 import "./legacy/kikan.css";
 
 const riskColors = {
@@ -156,8 +157,9 @@ function applyMapOverview(items = []) {
   });
 }
 
-async function loadMapOverview(date) {
+async function loadMapOverview(date, isCurrent = () => true) {
   const [map, snowCoverage] = await Promise.all([api.getMapOverview(date), api.getSnowCoverage()]);
+  if (!isCurrent()) return;
   const coverage = new Set(snowCoverage.map(normalizePrefecture));
   const supportedSnowPrefectures = map.items
     .map((item) => item.prefecture)
@@ -204,63 +206,100 @@ async function loadMapOverview(date) {
   ]);
   const snowByPrefecture = new Map(snowPredictions);
   const rainByPrefecture = new Map(rainPredictions);
+  if (!isCurrent()) return;
   const items = map.items.map((item) => ({
     ...item,
     snow_prediction: snowByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
     rain_prediction: rainByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
   }));
   applyMapOverview(items);
+  window.updateKikanMapOverviewData?.(items);
   window.updateKikanRainMapData?.(items);
 }
 
 async function initializeApiIntegration() {
   const checkButton = document.getElementById("check-risk-btn");
+  let appliedPeriod = null;
+  let selectionRevision = 0;
+  const initializationRevision = selectionRevision;
+  const isCurrentSelection = (revision) => revision === selectionRevision;
+
+  async function loadSelectionData(prefecture, period, revision) {
+    const { startDate, endDate } = period;
+    const [prediction, daily, timeseries] = await Promise.all([
+      api.predict({ prefecture, date: endDate }),
+      api.getDaily({ prefecture, date: endDate }),
+      api.getTimeseries({ prefecture, startDate, endDate }),
+    ]);
+    if (!isCurrentSelection(revision)) return;
+
+    renderRisks(prediction.risks);
+    renderTimeseries(timeseries.series);
+    const tempRisk = prediction.risks?.find((risk) => risk.hazard === "temperature");
+    const temperature =
+      tempRisk?.predicted_value ?? daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
+    const tempEl = document.getElementById("stat-temp");
+    if (temperature !== undefined && tempEl) {
+      tempEl.textContent = formatTemperature(temperature, tempRisk?.risk_level);
+    }
+    const locationSummary = document.getElementById("mon-loc");
+    if (locationSummary) {
+      locationSummary.replaceChildren("Monitoring live weather for ", Object.assign(document.createElement("strong"), { textContent: prefecture }));
+    }
+    document.getElementById("map-summary-name").textContent = prefecture;
+    document.getElementById("map-summary-hazard").textContent = prediction.overall_risk_level || "Unknown";
+    setStatus(
+      `Live backend data loaded for ${prefecture} (${prediction.execution_mode || "backend"} mode).`,
+    );
+    const selectedPrefecture = prediction.prefecture || prefecture;
+    await loadMapOverview(endDate, () => isCurrentSelection(revision));
+    if (!isCurrentSelection(revision)) return;
+    window.updateKikanRiskMapSelection?.({
+      prefecture: selectedPrefecture,
+      riskLevel: prediction.overall_risk_level,
+    });
+  }
+
+  window.onKikanMapPrefectureSelect = (prefecture) => {
+    const revision = ++selectionRevision;
+    const period = resolveForecastPeriod(appliedPeriod, getTomorrowISODate());
+    setStatus(`Loading live weather and risk data for ${prefecture}…`);
+    loadSelectionData(prefecture, period, revision).catch((error) => {
+      if (isCurrentSelection(revision)) {
+        setStatus(`Unable to load backend data: ${error.message}`, true);
+      }
+    });
+  };
+
   checkButton?.addEventListener(
     "click",
     async (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
       const prefecture = document.getElementById("loc-input")?.value.trim();
-      const startDate = document.getElementById("from-date")?.value;
-      const endDate = document.getElementById("to-date")?.value;
-      if (!prefecture || !startDate || !endDate || startDate > endDate) {
+      if (!prefecture) {
         setStatus("Choose a prefecture and a valid date range.", true);
         return;
       }
+      const validatedPeriod = window.readKikanValidatedPeriod?.();
+      if (!validatedPeriod) return;
+      const period = { from: validatedPeriod.from, to: validatedPeriod.to };
+      appliedPeriod = period;
+      window.applyKikanRiskContext?.(prefecture, validatedPeriod);
       window.updateKikanRiskMapSelection?.({ prefecture });
+      const revision = ++selectionRevision;
       checkButton.disabled = true;
-      setStatus("Loading live weather and risk data…");
+      setStatus(`Loading live weather and risk data for ${prefecture}…`);
       try {
-        const [prediction, daily, timeseries] = await Promise.all([
-          api.predict({ prefecture, date: endDate }),
-          api.getDaily({ prefecture, date: endDate }),
-          api.getTimeseries({ prefecture, startDate, endDate }),
-        ]);
-        renderRisks(prediction.risks);
-        renderTimeseries(timeseries.series);
-        const tempRisk = prediction.risks?.find((risk) => risk.hazard === "temperature");
-        const temperature =
-          tempRisk?.predicted_value ?? daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
-        const tempEl = document.getElementById("stat-temp");
-        if (temperature !== undefined && tempEl) {
-          tempEl.textContent = formatTemperature(temperature, tempRisk?.risk_level);
-        }
-        const locationSummary = document.getElementById("mon-loc");
-        if (locationSummary) {
-          locationSummary.replaceChildren("Monitoring live weather for ", Object.assign(document.createElement("strong"), { textContent: prefecture }));
-        }
-        document.getElementById("map-summary-name").textContent = prefecture;
-        document.getElementById("map-summary-hazard").textContent = prediction.overall_risk_level || "Unknown";
-        setStatus(`Live backend data loaded for ${prefecture} (${prediction.execution_mode || "backend"} mode).`);
-        const selectedPrefecture = prediction.prefecture || prefecture;
-        const selectedDate = prediction.date || endDate;
-        await loadMapOverview(selectedDate);
-        window.updateKikanRiskMapSelection?.({
-          prefecture: selectedPrefecture,
-          riskLevel: prediction.overall_risk_level,
-        });
+        await loadSelectionData(
+          prefecture,
+          { startDate: period.from, endDate: period.to },
+          revision,
+        );
       } catch (error) {
-        setStatus(`Unable to load backend data: ${error.message}`, true);
+        if (isCurrentSelection(revision)) {
+          setStatus(`Unable to load backend data: ${error.message}`, true);
+        }
       } finally {
         checkButton.disabled = false;
       }
@@ -289,9 +328,14 @@ async function initializeApiIntegration() {
       input.max = dateRange.max_date;
       if (!input.value) input.value = dateRange.min_date;
     });
-    await loadMapOverview(document.getElementById("to-date")?.value || dateRange.min_date);
+    await loadMapOverview(
+      document.getElementById("to-date")?.value || dateRange.min_date,
+      () => isCurrentSelection(initializationRevision),
+    );
   } catch (error) {
-    setStatus(`Backend metadata or map data unavailable: ${error.message}`, true);
+    if (isCurrentSelection(initializationRevision)) {
+      setStatus(`Backend metadata or map data unavailable: ${error.message}`, true);
+    }
   }
 }
 
