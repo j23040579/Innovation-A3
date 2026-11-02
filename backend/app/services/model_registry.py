@@ -253,15 +253,32 @@ class ModelRegistry:
         elif hazard == "typhoon":
             df_in = self._model_input(hazard, weather_data)
             pred = model.predict(df_in)[0]
-            prob = self._probability(model, df_in)
+            probabilities = np.asarray(model.predict_proba(df_in)[0], dtype=float) if hasattr(model, "predict_proba") else None
+            prob = float(np.max(probabilities)) if probabilities is not None else None
+            profile_match_probabilities = (
+                {
+                    str(label).lower(): round(float(value), 3)
+                    for label, value in zip(model.classes_, probabilities)
+                }
+                if probabilities is not None
+                else {}
+            )
+            profile_match_class = str(pred)
+            profile_match_message = (
+                f"Closest landfall-weather profile: {profile_match_class}"
+                + (f" ({prob:.1%})" if prob is not None else "")
+                + "; typhoon occurrence risk is unassessed."
+            )
             return HazardRiskResult(
                 hazard="typhoon",
                 model_name=self.model_names.get("typhoon", "Random Forest Pipeline (Typhoon)"),
-                risk_level=str(pred),
-                probability=round(prob, 3) if prob is not None else None,
-                unit="profile_class",
-                threshold_exceeded=str(pred) in ["Medium", "High"],
-                alert_message="Typhoon wind/pressure signature detected" if str(pred) in ["Medium", "High"] else "No typhoon threat"
+                risk_level="Unassessed",
+                probability=None,
+                unit="profile_match",
+                threshold_exceeded=False,
+                alert_message=profile_match_message,
+                profile_match_class=profile_match_class,
+                profile_match_probabilities=profile_match_probabilities,
             )
 
         raise NotImplementedError(f"Prediction logic for {hazard} is not yet implemented.")

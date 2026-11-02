@@ -351,7 +351,6 @@ mapHazardSelect?.addEventListener('change', ()=>{
     mapHazardSelect.value = selectedMapHazard;
   }
   updateMapChoropleth();
-  selectPref(currentPref, {zoom:false});
 });
 function selectPref(id, options = {}){
   if(selectedMapHazard === 'snow' && !SNOW_MODEL_PREFECTURES.has(id)) selectedMapHazard = 'typhoon';

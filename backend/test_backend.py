@@ -75,6 +75,13 @@ def run_tests():
         assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
         pred = res.json()
         print(f"  Passed! Mode: '{pred['execution_mode']}', Overall Risk: '{pred['overall_risk_level']}'")
+        typhoon_risk = next(r for r in pred["risks"] if r["hazard"] == "typhoon")
+        assert typhoon_risk["risk_level"] == "Unassessed", f"Unexpected typhoon risk level: {typhoon_risk['risk_level']}"
+        assert typhoon_risk["threshold_exceeded"] is False, "Unvalidated profile match must not trigger a typhoon warning"
+        assert typhoon_risk["probability"] is None, "Profile-match probability must not be exposed as occurrence risk"
+        assert typhoon_risk["profile_match_class"] in {"Low", "Medium", "High"}
+        assert "profile_match_probabilities" in typhoon_risk
+        assert pred["overall_risk_level"] != "High", "Unassessed typhoon profile match must not inflate overall risk"
         for r in pred["risks"]:
             val = f" ({r['predicted_value']}{r['unit']})" if r.get('predicted_value') else f" (prob: {r.get('probability')})"
             print(f"    - {r['hazard'].capitalize()}: {r['risk_level']}{val} | Model: {r['model_name']}")
