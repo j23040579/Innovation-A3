@@ -68,34 +68,36 @@ function renderRisks(risks = []) {
   const grid = document.getElementById("hazard-grid");
   if (!grid) return;
   grid.replaceChildren();
-  risks.forEach((risk) => {
-    const style = riskStyle(risk.risk_level);
-    const profileProbabilities = risk.profile_match_probabilities;
-    const card = document.createElement("div");
-    card.className = "card hazard";
-    const top = document.createElement("div");
-    top.className = "hazard-top";
-    const name = document.createElement("span");
-    name.className = "hazard-name";
-    name.textContent = risk.hazard || "Unknown hazard";
-    const level = document.createElement("span");
-    level.className = `hazard-level ${style.className}`;
-    level.textContent =
-      risk.hazard === "temperature" && risk.predicted_value != null
-        ? formatTemperature(risk.predicted_value, risk.risk_level)
-        : risk.risk_level || "Unknown";
-    top.append(name, level);
-    const message = document.createElement("small");
-    message.textContent = risk.alert_message || "Live backend prediction";
-    if (profileProbabilities) {
-      const profileLabel = document.createElement("small");
-      profileLabel.textContent = "Landfall profile match (not typhoon occurrence probability)";
-      card.append(top, profileLabel, message);
-    } else {
-      card.append(top, message);
-    }
-    grid.appendChild(card);
-  });
+  risks
+    .filter((risk) => !["wind", "rain"].includes(String(risk.hazard || "").trim().toLowerCase()))
+    .forEach((risk) => {
+      const style = riskStyle(risk.risk_level);
+      const profileProbabilities = risk.profile_match_probabilities;
+      const card = document.createElement("div");
+      card.className = "card hazard";
+      const top = document.createElement("div");
+      top.className = "hazard-top";
+      const name = document.createElement("span");
+      name.className = "hazard-name";
+      name.textContent = risk.hazard || "Unknown hazard";
+      const level = document.createElement("span");
+      level.className = `hazard-level ${style.className}`;
+      level.textContent =
+        risk.hazard === "temperature" && risk.predicted_value != null
+          ? formatTemperature(risk.predicted_value, risk.risk_level)
+          : risk.risk_level || "Unknown";
+      top.append(name, level);
+      const message = document.createElement("small");
+      message.textContent = risk.alert_message || "Live backend prediction";
+      if (profileProbabilities) {
+        const profileLabel = document.createElement("small");
+        profileLabel.textContent = "Landfall profile match (not typhoon occurrence probability)";
+        card.append(top, profileLabel, message);
+      } else {
+        card.append(top, message);
+      }
+      grid.appendChild(card);
+    });
 }
 
 function renderTimeseries(series = []) {

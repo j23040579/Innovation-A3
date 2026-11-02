@@ -245,9 +245,6 @@
   .hazard-level{ font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px; }
   .lvl-low{ background:var(--teal-soft); color:#7FCFCF; }
   .lvl-high{ background:var(--red-soft); color:#E88A76; }
-  .hazard-pct{ font-size:12px; color:var(--text-lo); }
-  .hazard-grade{ font-size:12px; font-weight:700; margin-top:2px; }
-  .hazard-grade-wind{ font-weight:500; color:var(--text-lo); }
   .section-head{ display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:30px 0 14px; }
   .section-head .section-label{ margin:0; }
   .tips-toggle{ font-family:var(--font-body); font-weight:600; font-size:12.5px; padding:6px 12px; border-radius:8px; border:1px solid #BBD8D8; background:var(--teal-soft); color:var(--teal); cursor:pointer; }
@@ -727,9 +724,6 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 }
 
 /* Keep secondary labels readable in dark mode. */
-:root[data-theme="dark"] .hazard-grade,
-:root[data-theme="dark"] .hazard-grade-wind,
-:root[data-theme="dark"] .hazard-pct,
 :root[data-theme="dark"] .pane-sub,
 :root[data-theme="dark"] .chart-card .sub,
 :root[data-theme="dark"] .viz-controls label,
@@ -759,7 +753,6 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 .map-toolbar{top:auto!important;right:14px!important;bottom:14px!important;left:auto!important;z-index:9;flex-direction:row!important;}
 .map-hazard-control{width:190px!important;} /* approximately 3% smaller */
 .map-pane svg{max-height:440px!important;min-height:300px;}
-.hazard-pct{display:none!important;}
 .temperature-only{flex:0 0 180px;max-width:100%;}
 .stat-trio{justify-content:flex-start;}
 .pref-validation-prompt{margin-top:6px;padding:7px 10px;border-radius:8px;background:#FFF1F2;color:#9F1239;border:1px solid #FDA4AF;font-size:12px;font-weight:600;box-shadow:0 3px 10px rgba(0,0,0,.08);}
