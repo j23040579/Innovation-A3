@@ -276,9 +276,10 @@ function modeledRiskScore(pref){
   return Math.max(...Object.entries(pref.hazards).filter(([key])=>key !== 'snow' || SNOW_MODEL_PREFECTURES.has(Object.keys(PREFS).find(id=>PREFS[id]===pref))).map(([,value])=>value));
 }
 function mapRiskColor(score){
-  if(score < 25) return '#22C55E';
-  if(score < 45) return '#F59E0B';
-  return '#EF4444';
+  if(score === null || score === undefined || !Number.isFinite(Number(score))) return '#FFFFFF';
+  if(Number(score) < 25) return '#FED7AA';
+  if(Number(score) < 45) return '#F59E0B';
+  return '#C2410C';
 }
 function updateMapChoropleth(){
   const selector = document.getElementById('map-hazard-select');
@@ -303,8 +304,9 @@ function updateMapChoropleth(){
     if(p){
       const selected = el.dataset.id === currentPref;
       const darkMap = document.documentElement.getAttribute('data-theme') === 'dark';
-      el.style.fill = selected ? '#2563EB' : '#9AAFC4';
-      el.style.opacity = selected ? '1' : '.18';
+      const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
+      el.style.fill = mapRiskColor(score);
+      el.style.opacity = '1';
       el.style.strokeWidth = selected ? '1.4' : '1';
       el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
       el.style.filter = selected ? 'drop-shadow(0 0 3px rgba(37,99,235,.65))' : 'none';
@@ -353,8 +355,9 @@ function selectPref(id, options = {}){
     el.classList.toggle('active', selected);
     el.setAttribute('aria-pressed', String(selected));
     const darkMap = document.documentElement.getAttribute('data-theme')==='dark';
-    el.style.fill = selected ? '#2563EB' : '#9AAFC4';
-    el.style.opacity = selected ? '1' : '.18';
+    const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
+    el.style.fill = mapRiskColor(score);
+    el.style.opacity = '1';
     el.style.strokeWidth = selected ? '1.4' : '1';
     el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
     el.style.filter = selected ? 'drop-shadow(0 0 3px rgba(37,99,235,.65))' : 'none';
@@ -816,4 +819,3 @@ refreshDateConstraints();
 
 selectPref('tokyo');
 `;
-

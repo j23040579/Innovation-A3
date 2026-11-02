@@ -39,7 +39,7 @@ export const kikanMarkup = `<header class="topnav">
 <div class="hero">
 <div class="hero-eyebrow">Prefecture-level forecasting</div>
 <h1 id="home-title">Know the risk before you travel through Japan.</h1>
-<p class="lede">Kikan combines historical rainfall, river discharge, and elevation data across every prefecture to flag typhoon, flood, and landslide risk — with nearby evacuation shelters when it matters.</p>
+<p class="lede">Kikan combines historical rainfall, river discharge, and elevation data across every prefecture to flag typhoon and flood risk — with nearby evacuation shelters when it matters.</p>
 <div class="hero-ctas">
 <button class="btn btn-primary" data-goto="prediction">Check a prefecture's risk</button>
 <button class="btn btn-ghost" data-goto="dataviz">View seasonal trends</button>
@@ -106,7 +106,7 @@ export const kikanMarkup = `<header class="topnav">
 <p class="map-data-note">Choose a hazard to compare its modeled score across prefectures. These prototype scores are illustrative, not live warnings.</p>
 <div class="map-shell">
 <div class="map-pane">
-<div class="map-hazard-control"><label for="map-hazard-select">Show map by disaster</label><select id="map-hazard-select" aria-label="Choose disaster type for map shading"><option value="typhoon">Typhoon</option><option value="rain">Heavy rain</option><option value="flood">Flood</option><option value="landslide">Landslide</option><option value="thunder">Thunderstorm</option><option value="snow">Heavy snow (Niigata &amp; Yamagata only)</option></select></div>
+<div class="map-hazard-control"><label for="map-hazard-select">Show map by disaster</label><select id="map-hazard-select" aria-label="Choose disaster type for map shading"><option value="typhoon">Typhoon</option><option value="rain">Heavy rain</option><option value="flood">Flood</option><option value="thunder">Thunderstorm</option><option value="snow">Heavy snow (Niigata &amp; Yamagata only)</option></select></div>
 <svg aria-label="Map of Japan with 47 clickable prefectures" id="japan-svg" role="img" viewbox="0 0 438 516">
 <g id="zoom-g">
 <g id="map-g">
@@ -215,11 +215,7 @@ export const kikanMarkup = `<header class="topnav">
 <div class="sub">Risk score (0–100) by month</div>
 <div class="chart-wrap"><div id="chart-flood" class="d3-chart" role="img" aria-label="Heavy rain and flood risk line chart"></div></div>
 </div>
-<div class="card chart-card">
-<div class="chart-heading"><h3>Landslide &amp; mudslide</h3><div class="chart-actions" aria-label="Chart zoom controls"><button type="button" data-chart-action="out" data-chart-id="chart-landslide" aria-label="Zoom out on landslide chart">−</button><button type="button" data-chart-action="in" data-chart-id="chart-landslide" aria-label="Zoom in on landslide chart">+</button><button type="button" data-chart-action="reset" data-chart-id="chart-landslide" aria-label="Reset landslide chart zoom">Reset</button></div></div>
-<div class="sub">Risk score (0–100) by month</div>
-<div class="chart-wrap"><div id="chart-landslide" class="d3-chart" role="img" aria-label="Landslide and mudslide risk line chart"></div></div>
-</div>
+
 <div class="card chart-card">
 <div class="chart-heading"><h3>Heavy snow</h3><div class="chart-actions" aria-label="Chart zoom controls"><button type="button" data-chart-action="out" data-chart-id="chart-snow" aria-label="Zoom out on snow chart">−</button><button type="button" data-chart-action="in" data-chart-id="chart-snow" aria-label="Zoom in on snow chart">+</button><button type="button" data-chart-action="reset" data-chart-id="chart-snow" aria-label="Reset snow chart zoom">Reset</button></div></div>
 <div class="sub">Risk score (0–100) by month</div>
