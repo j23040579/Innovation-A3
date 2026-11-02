@@ -856,23 +856,13 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 #map-g .pref.active{fill:#2563EB!important;opacity:1!important;stroke:#1D4ED8!important;stroke-width:1.4!important;filter:drop-shadow(0 0 3px rgba(37,99,235,.65))!important;}
 :root[data-theme="dark"] #map-g .pref.active{fill:#2563EB!important;stroke:#BFDBFE!important;}
 
-[data-forecast-loading="true"]{position:relative;}
-[data-forecast-loading="true"]::after{
-  content:"Updating...";
-  position:absolute;
-  inset:0;
-  z-index:5;
-  display:grid;
-  place-items:center;
-  border-radius:inherit;
-  background:rgba(255,255,255,.84);
-  color:#526071;
-  font-size:12px;
-  font-weight:700;
-  pointer-events:none;
+[data-forecast-loading="true"]{
+  animation:forecast-refresh-pulse 1.4s ease-in-out infinite;
 }
-#hazard-grid[data-forecast-loading="true"]{min-height:120px;}
-:root[data-theme="dark"] [data-forecast-loading="true"]::after{
-  background:rgba(17,24,39,.84);
-  color:#CBD5E1;
+@keyframes forecast-refresh-pulse{
+  0%,100%{opacity:1;filter:brightness(1);}
+  50%{opacity:.68;filter:brightness(1.12);}
+}
+@media(prefers-reduced-motion:reduce){
+  [data-forecast-loading="true"]{animation:none;opacity:.72;}
 }
