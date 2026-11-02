@@ -15,6 +15,15 @@ router = APIRouter(prefix="/predict", tags=["Disaster Prediction"])
 def get_supported_hazards():
     return inference_service.AVAILABLE_HAZARDS
 
+@router.get(
+    "/snow-coverage",
+    response_model=List[str],
+    summary="List prefectures with loaded snow models",
+    description="Returns prefectures with a region-specific snow model artifact loaded by the inference service."
+)
+def get_snow_coverage():
+    return inference_service.snow_supported_prefectures
+
 @router.post(
     "",
     response_model=PredictionResponse,
@@ -32,8 +41,8 @@ def predict_disaster_risks(request: PredictionRequest):
     if not weather_dict:
         raise HTTPException(
             status_code=404,
-            detail=f"Could not retrieve weather conditions for prefecture '{request.prefecture}' on date '{request.date}'. "
-                   f"Please verify prefecture spelling and that the date is within the forecast window."
+            detail=f"No forecast weather record is available for prefecture '{request.prefecture}' "
+                   f"on date '{request.date}'. The configured forecast dataset does not contain this prefecture/date."
         )
 
     # 2. Run inference engine (or mock fallback if Backend 2 is not yet plugged in)

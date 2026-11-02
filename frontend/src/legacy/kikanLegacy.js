@@ -331,6 +331,8 @@ function updateMapChoropleth(){
     const p = PREFS[el.dataset.id];
     if(p){
       const selected = el.dataset.id === currentPref;
+      el.classList.toggle('active', selected);
+      el.setAttribute('aria-pressed', String(selected));
       const darkMap = document.documentElement.getAttribute('data-theme') === 'dark';
       const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
       el.style.fill = selectedMapHazard === 'snow' ? mapSnowColor(el.dataset.id) : mapRiskColor(score);
@@ -339,6 +341,11 @@ function updateMapChoropleth(){
       el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
       el.style.filter = selected ? 'drop-shadow(0 0 3px rgba(37,99,235,.65))' : 'none';
     }
+  });
+  document.querySelectorAll('.pref-label').forEach(el=>{
+    const selected = el.dataset.for === currentPref;
+    el.classList.toggle('active', selected);
+    el.style.opacity = selected ? '1' : '.18';
   });
 }
 function zoomToPrefecture(id){
@@ -363,6 +370,20 @@ window.updateKikanSnowMapData = items=>{
   const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   mapSnowData = new Map(items.map(item=>[normalize(item.prefecture), item]));
   updateMapChoropleth();
+};
+window.updateKikanRiskMapSelection = ({prefecture, riskLevel}={})=>{
+  const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const id = Object.keys(PREFS).find(key=>normalize(PREFS[key].name)===normalize(prefecture));
+  if(!id) return;
+  currentPref = id;
+  document.getElementById('map-summary-name').textContent = PREFS[id].name;
+  if(riskLevel) document.getElementById('map-summary-hazard').textContent = riskLevel;
+  document.getElementById('map-risk-summary').setAttribute(
+    'aria-label',
+    PREFS[id].name + ': overall risk level ' + (riskLevel || 'Unknown') + '.'
+  );
+  updateMapChoropleth();
+  zoomToPrefecture(id);
 };
 function selectPref(id, options = {}){
   if(selectedMapHazard === 'snow' && !hasMapSnowPrediction(id)) selectedMapHazard = 'typhoon';

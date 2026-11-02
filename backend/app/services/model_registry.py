@@ -31,6 +31,8 @@ class ModelRegistry:
     def __init__(self):
         self.models: Dict[str, Any] = {}
         self.model_names: Dict[str, str] = {}
+        self.snow_models: Dict[str, Any] = {}
+        self.snow_model_names: Dict[str, str] = {}
         self.is_ready: bool = False
         self.root_dir = settings.PROJECT_ROOT_DIR
 
@@ -92,6 +94,38 @@ class ModelRegistry:
             return frame.loc[:, list(expected)]
         return frame
 
+    def _snow_model_input(self, weather_data: Dict[str, Any], model: Any) -> Any:
+        frame = self._processor_for("snow").transform(weather_data)
+        expected = getattr(model, "feature_names_in_", None)
+        if expected is not None:
+            missing = [column for column in expected if column not in frame.columns]
+            if missing:
+                raise ValueError(f"Missing snow model features: {missing}")
+            return frame.loc[:, list(expected)]
+        return frame
+
+    def _load_snow_models(self) -> bool:
+        """Load each region's snow model so availability follows installed artifacts."""
+        model_dir = self.root_dir / "Heavy Snow" / "trained_models"
+        if not model_dir.is_dir():
+            return False
+
+        for path in sorted(model_dir.glob("*/random_forest.joblib")):
+            prefecture = path.parent.name.strip().lower()
+            try:
+                model = joblib.load(path)
+                self._validate_model_contract("snow", model, path)
+                self.snow_models[prefecture] = model
+                self.snow_model_names[prefecture] = f"Random Forest Classifier (Snow: {path.parent.name.title()})"
+                logger.info(f"Loaded snow model for {path.parent.name.title()} from {path.name}")
+            except Exception as e:
+                logger.warning(f"Could not load snow model {path.name}: {e}")
+        return bool(self.snow_models)
+
+    @property
+    def snow_supported_prefectures(self) -> List[str]:
+        return [prefecture.title() for prefecture in sorted(self.snow_models)]
+
     @staticmethod
     def _probability(model: Any, model_input: Any) -> Optional[float]:
         if not hasattr(model, "predict_proba"):
@@ -107,6 +141,8 @@ class ModelRegistry:
         logger.info("Attempting to load trained .joblib models from project directory...")
         self.models.clear()
         self.model_names.clear()
+        self.snow_models.clear()
+        self.snow_model_names.clear()
         self.is_ready = False
         loaded_count = 0
 
@@ -126,10 +162,7 @@ class ModelRegistry:
             loaded_count += 1
 
         # 3. Snow Model (Niigata RF -> Yamagata RF)
-        if self._load_with_fallbacks("snow", [
-            (Path("Heavy Snow") / "trained_models" / "niigata" / "random_forest.joblib", "Random Forest Classifier (Snow)"),
-            (Path("Heavy Snow") / "trained_models" / "yamagata" / "random_forest.joblib", "Random Forest Classifier (Snow)"),
-        ]):
+        if self._load_snow_models():
             loaded_count += 1
 
         # 4. Temperature Model (HistGradientBoosting -> Gradient Boosting -> Linear Regression)
@@ -167,7 +200,7 @@ class ModelRegistry:
         Executes prediction using the appropriate processor and loaded model.
         """
         model = self.models.get(hazard)
-        if model is None:
+        if model is None and hazard != "snow":
             raise KeyError(f"No loaded model for hazard: {hazard}")
 
         # --- FLOOD ---
@@ -204,14 +237,18 @@ class ModelRegistry:
 
         # --- SNOW ---
         elif hazard == "snow":
-            df_in = self._model_input(hazard, weather_data)
+            prefecture_key = str(prefecture).strip().lower()
+            model = self.snow_models.get(prefecture_key)
+            if model is None:
+                raise KeyError(f"No loaded snow model for prefecture: {prefecture}")
+            df_in = self._snow_model_input(weather_data, model)
             pred = model.predict(df_in)[0]
             prob = self._probability(model, df_in)
             risk_labels = {0: "Low", 1: "Medium", 2: "High"}
             risk_str = risk_labels.get(pred, str(pred))
             return HazardRiskResult(
                 hazard="snow",
-                model_name=self.model_names.get("snow", "Random Forest Classifier (Snow)"),
+                model_name=self.snow_model_names[prefecture_key],
                 risk_level=risk_str,
                 probability=round(prob, 3) if prob is not None else None,
                 unit="class",

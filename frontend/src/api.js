@@ -14,7 +14,9 @@ async function request(path, options = {}) {
     } catch {
       // Keep the HTTP status when the server does not return JSON.
     }
-    throw new Error(detail);
+    const error = new Error(detail);
+    error.status = response.status;
+    throw error;
   }
   return response.json();
 }
@@ -22,6 +24,7 @@ async function request(path, options = {}) {
 export const api = {
   getPrefectures: () => request("/api/metadata/prefectures"),
   getDateRange: () => request("/api/metadata/date-range"),
+  getSnowCoverage: () => request("/api/predict/snow-coverage"),
   getDaily: ({ prefecture, date, town }) =>
     request(`/api/weather/daily?${new URLSearchParams({ prefecture, date, ...(town ? { town } : {}) })}`),
   getTimeseries: ({ prefecture, startDate, endDate, town }) =>

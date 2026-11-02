@@ -41,6 +41,11 @@ def run_tests():
         assert res.status_code == 200, f"Expected 200, got {res.status_code}"
         data = res.json()
         print(f"  Passed! Found {data['count']} prefectures. Sample: {data['prefectures'][0]['prefecture']}")
+        snow_coverage = client.get("/api/predict/snow-coverage")
+        assert snow_coverage.status_code == 200, f"Snow model coverage failed: {snow_coverage.text}"
+        assert {"Niigata", "Yamagata"} <= set(snow_coverage.json()), (
+            f"Expected coverage to reflect both installed regional models: {snow_coverage.json()}"
+        )
 
         # Test 3: Metadata Date Range
         print("\n[3/7] Testing GET /api/metadata/date-range ...")
@@ -63,6 +68,13 @@ def run_tests():
         assert hokkaido.status_code == 200, f"Hokkaido lookup failed: {hokkaido.status_code} {hokkaido.text}"
         mie = client.get("/api/weather/daily?prefecture=Mie&date=2026-02-01")
         assert mie.status_code == 200, f"Mie lookup failed: {mie.status_code} {mie.text}"
+
+        niigata_daily = client.get("/api/weather/daily?prefecture=Niigata&date=2026-11-30")
+        assert niigata_daily.status_code == 404, (
+            "The consolidated forecast has no Niigata row for 2026-11-30; "
+            f"unexpected response: {niigata_daily.status_code} {niigata_daily.text}"
+        )
+        assert "does not contain this prefecture/date" in niigata_daily.json()["detail"]
 
         # Test 5: Time Series Query for D3 Charts
         print("\n[5/7] Testing GET /api/weather/timeseries ...")
@@ -91,13 +103,17 @@ def run_tests():
             assert snow_prediction["execution_mode"] == "inference", (
                 f"Expected model-backed snow prediction for {prefecture}"
             )
+            assert snow_risk["model_name"].endswith("(Snow: Yamagata)"), (
+                f"Expected the prefecture-specific snow model, got {snow_risk['model_name']}"
+            )
             assert snow_risk["risk_level"] in {"Low", "Medium", "High"}
         niigata_snow = client.post(
             "/api/predict",
-            json={"prefecture": "Niigata", "date": "2026-06-15", "hazards": ["snow"]},
+            json={"prefecture": "Niigata", "date": "2026-11-30", "hazards": ["snow"]},
         )
-        assert niigata_snow.status_code == 404, "Niigata should remain unavailable without forecast data"
-        print("  Passed! Yamagata has a model-backed snow prediction; unsupported Niigata has none.")
+        assert niigata_snow.status_code == 404, "Niigata has no daily forecast row for 2026-11-30"
+        assert "does not contain this prefecture/date" in niigata_snow.json()["detail"]
+        print("  Confirmed Niigata 2026-11-30 has no source weather row; requests return 404.")
 
         # Test 7: Multi-hazard Disaster Prediction
         print("\n[7/7] Testing POST /api/predict ...")
