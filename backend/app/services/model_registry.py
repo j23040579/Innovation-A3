@@ -5,6 +5,7 @@ import joblib
 import numpy as np
 
 from app.core.config import settings
+from app.core.temperature_status import classify_temperature, temperature_alert
 from app.schemas.prediction import HazardRiskResult
 from app.processors import (
     flood_processor,
@@ -222,15 +223,15 @@ class ModelRegistry:
         elif hazard == "temperature":
             X = self._model_input(hazard, weather_data)
             pred_temp = float(model.predict(X)[0])
-            risk = "Critical" if pred_temp >= 36 else ("High" if pred_temp >= 33 else ("Medium" if pred_temp >= 28 else "Low"))
+            status = classify_temperature(pred_temp)
             return HazardRiskResult(
                 hazard="temperature",
                 model_name=self.model_names.get("temperature", "HistGradientBoosting Regressor"),
-                risk_level=risk,
-                predicted_value=round(pred_temp, 1),
+                risk_level=status,
+                predicted_value=round(pred_temp, 2),
                 unit="°C",
-                threshold_exceeded=pred_temp >= 33,
-                alert_message="Extreme heat advisory" if pred_temp >= 33 else "Temperature is normal"
+                threshold_exceeded=status in {"Frozen", "Severe Cold", "Hard Freeze", "Light Freeze", "Warm"},
+                alert_message=temperature_alert(status),
             )
 
         # --- WIND (REGRESSION) ---
