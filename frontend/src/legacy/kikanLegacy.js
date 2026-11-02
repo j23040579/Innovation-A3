@@ -65,6 +65,7 @@ let chartPref = 'tokyo';
 let selectedMapHazard = 'typhoon';
 const SNOW_MODEL_PREFECTURES = new Set(['niigata','yamagata']);
 let mapSnowData = new Map();
+let mapRainData = new Map();
 let charts = {};
 // Period applied by the last successful Check risk: {from, to, months}. Null = full year.
 let activePeriod = null;
@@ -309,6 +310,13 @@ function mapSnowColor(id){
   const risk = String(mapSnowData.get(id).snow_prediction.risk_level).toLowerCase();
   return risk === 'high' ? '#C2410C' : risk === 'medium' ? '#F59E0B' : '#FED7AA';
 }
+function mapRainColor(id){
+  const risk = String(mapRainData.get(id)?.rain_prediction?.risk_level || '').trim().toLowerCase();
+  if(['low','no/minimal rain','no rain','none'].includes(risk)) return '#FED7AA';
+  if(['moderate','medium'].includes(risk)) return '#F59E0B';
+  if(['high','critical'].includes(risk)) return '#C2410C';
+  return '#FFFFFF';
+}
 function updateMapChoropleth(){
   const selector = document.getElementById('map-hazard-select');
   if(selector){
@@ -335,7 +343,11 @@ function updateMapChoropleth(){
       el.setAttribute('aria-pressed', String(selected));
       const darkMap = document.documentElement.getAttribute('data-theme') === 'dark';
       const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
-      el.style.fill = selectedMapHazard === 'snow' ? mapSnowColor(el.dataset.id) : mapRiskColor(score);
+      el.style.fill = selectedMapHazard === 'snow'
+        ? mapSnowColor(el.dataset.id)
+        : selectedMapHazard === 'rain'
+          ? mapRainColor(el.dataset.id)
+          : mapRiskColor(score);
       el.style.opacity = '1';
       el.style.strokeWidth = selected ? '1.4' : '1';
       el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
@@ -371,6 +383,11 @@ window.updateKikanSnowMapData = items=>{
   mapSnowData = new Map(items.map(item=>[normalize(item.prefecture), item]));
   updateMapChoropleth();
 };
+window.updateKikanRainMapData = items=>{
+  const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  mapRainData = new Map(items.map(item=>[normalize(item.prefecture), item]));
+  if(selectedMapHazard === 'rain') updateMapChoropleth();
+};
 window.updateKikanRiskMapSelection = ({prefecture, riskLevel}={})=>{
   const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const id = Object.keys(PREFS).find(key=>normalize(PREFS[key].name)===normalize(prefecture));
@@ -405,7 +422,11 @@ function selectPref(id, options = {}){
     el.setAttribute('aria-pressed', String(selected));
     const darkMap = document.documentElement.getAttribute('data-theme')==='dark';
     const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
-    el.style.fill = selectedMapHazard === 'snow' ? mapSnowColor(el.dataset.id) : mapRiskColor(score);
+    el.style.fill = selectedMapHazard === 'snow'
+      ? mapSnowColor(el.dataset.id)
+      : selectedMapHazard === 'rain'
+        ? mapRainColor(el.dataset.id)
+        : mapRiskColor(score);
     el.style.opacity = '1';
     el.style.strokeWidth = selected ? '1.4' : '1';
     el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
