@@ -20,6 +20,8 @@ const riskColors = {
   critical: { className: "risk-high", color: "#9A3412" },
   unassessed: { className: "risk-unassessed", color: "var(--ink-soft)" },
 };
+const snowMapPrefectures = ["Niigata", "Yamagata"];
+const normalizePrefecture = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 function classifyTemperature(tempC) {
   const value = Number(tempC);
@@ -152,18 +154,48 @@ function renderTimeseries(series = []) {
 }
 
 function applyMapOverview(items = []) {
-  const normalize = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const byPrefecture = new Map(items.map((item) => [normalize(item.prefecture), item]));
+  window.updateKikanSnowMapData?.(items);
+  if (document.getElementById("map-hazard-select")?.value === "snow") return;
+  const byPrefecture = new Map(items.map((item) => [normalizePrefecture(item.prefecture), item]));
   document.querySelectorAll(".pref").forEach((path) => {
     const item =
-      byPrefecture.get(normalize(path.getAttribute("aria-label"))) ||
-      byPrefecture.get(normalize(path.dataset.id));
+      byPrefecture.get(normalizePrefecture(path.getAttribute("aria-label"))) ||
+      byPrefecture.get(normalizePrefecture(path.dataset.id));
     if (!item) return;
     const style = riskStyle(item.primary_risk_level);
     path.style.fill = style.color;
     path.style.opacity = "0.85";
     path.style.stroke = "#FFFFFF";
   });
+}
+
+async function loadMapOverview(date) {
+  const map = await api.getMapOverview(date);
+  const availableSnowPrefectures = map.items
+    .map((item) => item.prefecture)
+    .filter((prefecture) =>
+      snowMapPrefectures.some((candidate) => normalizePrefecture(candidate) === normalizePrefecture(prefecture)),
+    );
+  const snowPredictions = await Promise.all(
+    availableSnowPrefectures.map(async (prefecture) => {
+      const prediction = await api.predict({ prefecture, date, hazards: ["snow"] });
+      const snowRisk = prediction.risks?.find((risk) => risk.hazard === "snow");
+      return [
+        normalizePrefecture(prefecture),
+        {
+          execution_mode: prediction.execution_mode,
+          risk_level: snowRisk?.risk_level,
+        },
+      ];
+    }),
+  );
+  const snowByPrefecture = new Map(snowPredictions);
+  applyMapOverview(
+    map.items.map((item) => ({
+      ...item,
+      snow_prediction: snowByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
+    })),
+  );
 }
 
 async function initializeApiIntegration() {
@@ -204,8 +236,7 @@ async function initializeApiIntegration() {
         document.getElementById("map-summary-name").textContent = prefecture;
         document.getElementById("map-summary-hazard").textContent = prediction.overall_risk_level || "Unknown";
         setStatus(`Live backend data loaded for ${prefecture} (${prediction.execution_mode || "backend"} mode).`);
-        const map = await api.getMapOverview(endDate);
-        applyMapOverview(map.items);
+        await loadMapOverview(endDate);
       } catch (error) {
         setStatus(`Unable to load backend data: ${error.message}`, true);
       } finally {
@@ -236,8 +267,9 @@ async function initializeApiIntegration() {
       input.max = dateRange.max_date;
       if (!input.value) input.value = dateRange.min_date;
     });
+    await loadMapOverview(document.getElementById("to-date")?.value || dateRange.min_date);
   } catch (error) {
-    setStatus(`Backend metadata unavailable: ${error.message}`, true);
+    setStatus(`Backend metadata or map data unavailable: ${error.message}`, true);
   }
 }
 
