@@ -520,6 +520,8 @@ input::placeholder{color:var(--text-lo)!important;opacity:1;}
 .risk-low,.risk-label.low,.low-risk{color:var(--risk-low)!important;}
 .risk-medium,.risk-label.medium,.medium-risk{color:var(--risk-medium)!important;}
 .risk-high,.risk-label.high,.high-risk{color:var(--risk-high)!important;}
+.risk-cold,.risk-label.cold,.cold-risk{color:#2563EB!important;background:rgba(96,165,250,.14);border:1px solid rgba(37,99,235,.25);}
+.risk-warm,.risk-label.warm,.warm-risk{color:#C2410C!important;background:rgba(251,146,60,.14);border:1px solid rgba(234,88,12,.25);}
 .risk-unassessed{color:var(--ink-soft)!important;}
 @media(max-width:760px){
   .nav-inner{padding:12px 16px;gap:12px;flex-wrap:wrap;}
@@ -588,8 +590,7 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 :root[data-theme="dark"] body.access-contrast .card,:root[data-theme="dark"] body.access-contrast .home-card,:root[data-theme="dark"] body.access-contrast .shelter-pane,:root[data-theme="dark"] body.access-contrast .site-menu{background:#0B1220!important;color:#FFFFFF!important;}
 :root[data-theme="dark"] body.access-contrast .monitor-summary{background:#1F2937!important;color:#FFFFFF!important;}
 
-/* Keep the map and the places/shelters list as separate content-sized cards. */
-   This avoids stretching a short list into a large empty panel on wide screens. */
+/* Keep the map and the places/shelters list as separate content-sized cards. This avoids stretching a short list into a large empty panel on wide screens. */
 .map-shell{
   display:grid;
   grid-template-columns:minmax(0,1.25fr) minmax(290px,.95fr);
@@ -848,6 +849,15 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 .monitor .temperature-only .v{font-size:clamp(20px,3.2vw,32px);text-align:center;line-height:1.3;max-width:100%;padding:0 12px;overflow-wrap:anywhere;}
 #map-g .pref.active{fill:#2563EB!important;opacity:1!important;stroke:#1D4ED8!important;stroke-width:1.4!important;filter:drop-shadow(0 0 3px rgba(37,99,235,.65))!important;}
 :root[data-theme="dark"] #map-g .pref.active{fill:#2563EB!important;stroke:#BFDBFE!important;}
+
+/* The whole page reflects the selected temperature forecast without obscuring content. */
+body{background-color:var(--temperature-page-background,var(--paper));transition:background-color .35s ease;}
+body[data-temperature-status="cold"]{--temperature-page-background:#EAF4FF;}
+body[data-temperature-status="warm"]{--temperature-page-background:#FFF1E3;}
+:root[data-theme="dark"] body[data-temperature-status="cold"]{--temperature-page-background:#101D2D;}
+:root[data-theme="dark"] body[data-temperature-status="warm"]{--temperature-page-background:#2A1E14;}
+body.access-contrast[data-temperature-status]{--temperature-page-background:var(--paper);}
+@media(prefers-reduced-motion:reduce){body{transition:none!important;}}
 
 [data-forecast-loading="true"]{
   animation:forecast-refresh-pulse 1.4s ease-in-out infinite;
