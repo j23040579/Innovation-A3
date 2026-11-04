@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
+import * as d3Charts from "./charts/d3Charts";
 import { kikanMarkup } from "./legacy/kikanMarkup";
 import { kikanLegacy } from "./legacy/kikanLegacy";
 import { api } from "./api";
@@ -101,51 +102,7 @@ function renderRisks(risks = []) {
 }
 
 function renderTimeseries(series = []) {
-  const containers = ["chart-bar", "chart-typhoon", "chart-flood", "chart-landslide", "chart-snow"];
-  const values = {
-    "chart-bar": (point) => point.temperature_mean,
-    "chart-typhoon": (point) => point.wind_speed_max,
-    "chart-flood": (point) => point.rain_sum,
-    "chart-landslide": (point) => point.rain_sum,
-    "chart-snow": (point) => point.snowfall_sum,
-  };
-  containers.forEach((id) => {
-    const container = document.getElementById(id);
-    if (!container) return;
-    const data = series.map((point) => ({ date: point.date, value: Number(values[id](point) || 0) }));
-    container.replaceChildren();
-    if (!data.length) return;
-    const width = Math.max(280, container.clientWidth || 520);
-    const height = Math.max(190, container.clientHeight || 220);
-    const margin = { top: 14, right: 14, bottom: 36, left: 44 };
-    const x = d3
-      .scalePoint()
-      .domain(data.map((point) => point.date))
-      .range([margin.left, width - margin.right]);
-    const y = d3
-      .scaleLinear()
-      .domain([0, d3.max(data, (point) => point.value) || 1])
-      .nice()
-      .range([height - margin.bottom, margin.top]);
-    const svg = d3
-      .select(container)
-      .append("svg")
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("role", "img")
-      .attr("aria-label", "Live backend weather time series");
-    svg
-      .append("path")
-      .datum(data)
-      .attr("fill", "none")
-      .attr("stroke", "#2563EB")
-      .attr("stroke-width", 2.5)
-      .attr("d", d3.line().x((point) => x(point.date)).y((point) => y(point.value)));
-    svg
-      .append("g")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(Math.min(6, data.length)));
-    svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(5));
-  });
+  d3Charts.renderTimeseriesCharts(series);
 }
 
 function applyMapOverview(items = []) {
@@ -367,6 +324,7 @@ export default function App() {
     if (!rootRef.current) return;
     rootRef.current.innerHTML = kikanMarkup;
     window.d3 = d3;
+    window.KikanCharts = d3Charts;
     new Function(kikanLegacy)();
     initializeApiIntegration(rootRef.current).catch((error) => {
       setStatus(`Backend connection unavailable: ${error.message}`, true);
