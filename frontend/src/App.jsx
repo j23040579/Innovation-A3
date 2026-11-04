@@ -9,53 +9,16 @@ import {
   MAP_LOADING_SELECTOR,
   setForecastLoading,
 } from "./forecastLoading";
+import {
+  applyTemperatureBackground,
+  classifyTemperature,
+  formatTemperature,
+  riskStyle,
+  temperatureStatusStyle,
+} from "./temperatureStatus";
 import "./legacy/kikan.css";
 
-const riskColors = {
-  low: { className: "risk-low", color: "#FED7AA" },
-  "no/minimal rain": { className: "risk-low", color: "#FED7AA" },
-  "no rain": { className: "risk-low", color: "#FED7AA" },
-  none: { className: "risk-low", color: "#FED7AA" },
-  mild: { className: "risk-low", color: "#FED7AA" },
-  moderate: { className: "risk-medium", color: "#F59E0B" },
-  medium: { className: "risk-medium", color: "#F59E0B" },
-  cold: { className: "risk-medium", color: "#38BDF8" },
-  "light freeze": { className: "risk-medium", color: "#7DD3FC" },
-  "hard freeze": { className: "risk-high", color: "#0284C7" },
-  "severe cold": { className: "risk-high", color: "#0369A1" },
-  frozen: { className: "risk-high", color: "#0C4A6E" },
-  warm: { className: "risk-medium", color: "#F59E0B" },
-  high: { className: "risk-high", color: "#C2410C" },
-  critical: { className: "risk-high", color: "#9A3412" },
-  unassessed: { className: "risk-unassessed", color: "var(--ink-soft)" },
-};
 const normalizePrefecture = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-
-function classifyTemperature(tempC) {
-  const value = Number(tempC);
-  if (!Number.isFinite(value)) return "Unknown";
-  if (value <= -18) return "Frozen";
-  if (value <= -5) return "Severe Cold";
-  if (value < -2.2) return "Hard Freeze";
-  if (value <= 0) return "Light Freeze";
-  if (value <= 16) return "Cold";
-  if (value < 27) return "Mild";
-  return "Warm";
-}
-
-function formatTemperature(tempC, status) {
-  const value = Number(tempC);
-  if (!Number.isFinite(value)) return "—";
-  const label = status && status !== "Unknown" ? status : classifyTemperature(value);
-  return `${value.toFixed(2)}°C (${label})`;
-}
-
-function riskStyle(level) {
-  return riskColors[String(level || "unknown").toLowerCase()] || {
-    className: "risk-medium",
-    color: "#FFFFFF",
-  };
-}
 
 function setStatus(message, isError = false) {
   const status = document.getElementById("monitor-risk-summary");
@@ -71,7 +34,10 @@ function renderRisks(risks = []) {
   risks
     .filter((risk) => !["wind", "rain"].includes(String(risk.hazard || "").trim().toLowerCase()))
     .forEach((risk) => {
-      const style = riskStyle(risk.risk_level);
+      const style =
+        risk.hazard === "temperature"
+          ? temperatureStatusStyle(risk.risk_level)
+          : riskStyle(risk.risk_level);
       const profileProbabilities = risk.profile_match_probabilities;
       const card = document.createElement("div");
       card.className = "card hazard";
@@ -249,9 +215,12 @@ async function initializeApiIntegration(root) {
     const tempRisk = prediction.risks?.find((risk) => risk.hazard === "temperature");
     const temperature =
       tempRisk?.predicted_value ?? daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
+    const temperatureStatus =
+      tempRisk?.risk_level || classifyTemperature(temperature);
+    applyTemperatureBackground(temperatureStatus);
     const tempEl = document.getElementById("stat-temp");
     if (temperature !== undefined && tempEl) {
-      tempEl.textContent = formatTemperature(temperature, tempRisk?.risk_level);
+      tempEl.textContent = formatTemperature(temperature, temperatureStatus);
     }
     const locationSummary = document.getElementById("mon-loc");
     if (locationSummary) {
@@ -274,10 +243,12 @@ async function initializeApiIntegration(root) {
   window.onKikanMapPrefectureSelect = (prefecture) => {
     const revision = ++selectionRevision;
     const period = resolveForecastPeriod(appliedPeriod, getTomorrowISODate());
+    applyTemperatureBackground("Unknown");
     setSelectionLoading(true);
     setStatus(`Loading live weather and risk data for ${prefecture}…`);
     loadSelectionData(prefecture, period, revision).catch((error) => {
       if (isCurrentSelection(revision)) {
+        applyTemperatureBackground("Unknown");
         setStatus(`Unable to load backend data: ${error.message}`, true);
       }
     }).finally(() => {
@@ -301,6 +272,7 @@ async function initializeApiIntegration(root) {
       appliedPeriod = period;
       const revision = ++selectionRevision;
       checkButton.disabled = true;
+      applyTemperatureBackground("Unknown");
       setSelectionLoading(true);
       window.applyKikanRiskContext?.(prefecture, validatedPeriod);
       window.updateKikanRiskMapSelection?.({ prefecture });
@@ -313,6 +285,7 @@ async function initializeApiIntegration(root) {
         );
       } catch (error) {
         if (isCurrentSelection(revision)) {
+          applyTemperatureBackground("Unknown");
           setStatus(`Unable to load backend data: ${error.message}`, true);
         }
       } finally {
