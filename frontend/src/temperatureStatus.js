@@ -73,5 +73,17 @@ export function temperatureBackgroundTone(level) {
 }
 
 export function applyTemperatureBackground(level, body = document.body) {
-  body.dataset.temperatureStatus = temperatureBackgroundTone(level);
+  const tone = temperatureBackgroundTone(level);
+  body.dataset.temperatureStatus = tone;
+  const page = body.ownerDocument?.documentElement;
+  if (page) page.dataset.temperatureStatus = tone;
+}
+
+export function applyForecastTemperature(prediction, daily, body = document.body) {
+  const tempRisk = prediction.risks?.find((risk) => risk.hazard === "temperature");
+  const temperature =
+    tempRisk?.predicted_value ?? daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
+  const temperatureStatus = tempRisk?.risk_level || classifyTemperature(temperature);
+  applyTemperatureBackground(temperatureStatus, body);
+  return { temperature, temperatureStatus };
 }

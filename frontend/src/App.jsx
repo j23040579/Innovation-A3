@@ -11,8 +11,8 @@ import {
   setForecastLoading,
 } from "./forecastLoading";
 import {
+  applyForecastTemperature,
   applyTemperatureBackground,
-  classifyTemperature,
   formatTemperature,
   riskStyle,
   temperatureStatusStyle,
@@ -169,12 +169,7 @@ async function initializeApiIntegration(root) {
 
     renderRisks(prediction.risks);
     renderTimeseries(timeseries.series);
-    const tempRisk = prediction.risks?.find((risk) => risk.hazard === "temperature");
-    const temperature =
-      tempRisk?.predicted_value ?? daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
-    const temperatureStatus =
-      tempRisk?.risk_level || classifyTemperature(temperature);
-    applyTemperatureBackground(temperatureStatus);
+    const { temperature, temperatureStatus } = applyForecastTemperature(prediction, daily);
     const tempEl = document.getElementById("stat-temp");
     if (temperature !== undefined && tempEl) {
       tempEl.textContent = formatTemperature(temperature, temperatureStatus);
