@@ -287,7 +287,7 @@ function readValidatedPeriod(){
 }
 function applyRiskContext(prefId, period){
   activePeriod = period;
-  Object.keys(chartViews).forEach(key=>delete chartViews[key]);
+  window.KikanCharts?.resetMonthlyChartZoom();
   selectPref(prefId); // also refreshes the period summary and the hazard cards
   chartPref = prefId;
   const region=document.getElementById('region-select');
@@ -597,122 +597,16 @@ regionSelect.addEventListener('change', ()=>{
   renderCharts();
 });
 
-const chartViews = {};
-// Visible chart window over the active months. The window is a run of positions in
-// that list, so a multi-year range (e.g. Nov, Dec, Jan, Feb) zooms like a normal one.
-function visibleWindowFor(id){
-  const months = activeMonthIndexes();
-  const stored = chartViews[id];
-  if(!stored) return {months, start:0, count:months.length};
-  const count = Math.max(Math.min(3, months.length), Math.min(months.length, stored.count));
-  const start = Math.max(0, Math.min(months.length - count, stored.start));
-  return {months, start, count};
-}
-function changeChartZoom(id, action){
-  const state = visibleWindowFor(id);
-  const total = state.months.length;
-  if(action==='reset') chartViews[id]={start:0,count:total};
-  else {
-    const nextCount=action==='in' ? Math.max(Math.min(3,total),state.count-2) : Math.min(total,state.count+2);
-    const center=state.start+state.count/2;
-    const nextStart=Math.max(0,Math.min(total-nextCount,Math.round(center-nextCount/2)));
-    chartViews[id]={start:nextStart,count:nextCount};
-  }
-  renderCharts();
-}
-document.addEventListener('click', event=>{
-  const btn=event.target.closest('[data-chart-action][data-chart-id]');
-  if(btn) changeChartZoom(btn.dataset.chartId, btn.dataset.chartAction);
-});
-
-function chartBase(){
-  const d3 = window.d3;
-  if(!d3) return;
-  const styles = getComputedStyle(document.documentElement);
-  const read = name => styles.getPropertyValue(name).trim();
-  const colors = {
-    text: read('--chart-text') || '#334155',
-    grid: read('--chart-grid') || '#D8E0E8',
-    axis: read('--chart-axis') || '#8793A3',
-    blue: read('--chart-blue') || '#2563EB',
-    teal: read('--chart-teal') || '#0F766E',
-    orange: read('--chart-orange') || '#C2410C',
-    purple: read('--chart-purple') || '#7C3AED',
-    red: read('--chart-red') || '#B91C1C',
-    surface: read('--surface') || '#FFFFFF'
-  };
-  return { d3, colors };
-}
-
-function drawD3Chart(id, data, type, color, label){
-  const base = chartBase();
-  if(!base) return;
-  const { d3, colors } = base;
-  const container = document.getElementById(id);
-  if(!container) return;
-  container.replaceChildren();
-  const width = Math.max(280, container.clientWidth || 520);
-  const height = Math.max(190, container.clientHeight || 220);
-  const margin = {top:14, right:14, bottom:36, left:44};
-  const innerW = width - margin.left - margin.right;
-  const innerH = height - margin.top - margin.bottom;
-  const svg = d3.select(container).append('svg')
-    .attr('viewBox', \`0 0 \${width} \${height}\`)
-    .attr('role','img')
-    .attr('aria-label', \`\${label}. Monthly illustrative scores from 0 to 100.\`);
-  svg.append('title').text(\`\${label} — \${PREFS[chartPref].name}\`);
-  const g = svg.append('g').attr('transform', \`translate(\${margin.left},\${margin.top})\`);
-  const view = visibleWindowFor(id);
-  const visibleIdx = view.months.slice(view.start, view.start + view.count);
-  const visibleMonths = visibleIdx.map(i=>MONTHS[i]);
-  const visibleData = visibleIdx.map(i=>data[i]);
-  const x = d3.scaleBand().domain(visibleMonths).range([0,innerW]).padding(type==='bar' ? .2 : .05);
-  // Keep Y fixed at 0–100; zoom only changes the visible X-axis months.
-  const y = d3.scaleLinear().domain([0,100]).range([innerH,0]);
-  g.append('g').attr('class','grid').call(d3.axisLeft(y).ticks(5).tickSize(-innerW).tickFormat(()=> ''));
-  g.selectAll('.grid line').attr('stroke',colors.grid);
-  g.append('g').attr('class','axis').attr('transform',\`translate(0,\${innerH})\`).call(d3.axisBottom(x).tickSizeOuter(0));
-  g.append('g').attr('class','axis').call(d3.axisLeft(y).ticks(5).tickSizeOuter(0).tickPadding(7));
-  if(type==='bar'){
-    g.selectAll('rect.bar').data(visibleData).join('rect')
-      .attr('class','bar').attr('x',(d,i)=>x(visibleMonths[i]))
-      .attr('y',d=>y(d)).attr('width',x.bandwidth()).attr('height',d=>innerH-y(d))
-      .attr('rx',3).attr('fill',d=>d>=45?colors.orange:color)
-      .append('title').text((d,i)=>\`\${visibleMonths[i]}: \${d}/100 (illustrative score)\`);
-  } else {
-    const line = d3.line().x((d,i)=>x(visibleMonths[i])+x.bandwidth()/2).y(d=>y(d)).curve(d3.curveMonotoneX);
-    const area = d3.area().x((d,i)=>x(visibleMonths[i])+x.bandwidth()/2).y0(innerH).y1(d=>y(d)).curve(d3.curveMonotoneX);
-    g.append('path').datum(visibleData).attr('d',area).attr('fill',color).attr('opacity',.12);
-    g.append('path').datum(visibleData).attr('d',line).attr('fill','none').attr('stroke',color).attr('stroke-width',2.5);
-    g.selectAll('circle.point').data(visibleData).join('circle').attr('class','point')
-      .attr('cx',(d,i)=>x(visibleMonths[i])+x.bandwidth()/2).attr('cy',d=>y(d)).attr('r',3.3)
-      .attr('fill',color).attr('stroke',colors.surface).attr('stroke-width',1.2)
-      .append('title').text((d,i)=>\`\${visibleMonths[i]}: \${d}/100 (illustrative score)\`);
-  }
-  document.querySelectorAll('[data-chart-id="'+id+'" ]').forEach(btn=>{
-    btn.disabled = btn.dataset.chartAction==='in' ? view.count<=Math.min(3,view.months.length) : btn.dataset.chartAction==='out' ? view.count>=view.months.length : false;
-  });
-  g.selectAll('.axis text').attr('fill',colors.text);
-  g.selectAll('.axis path,.axis line').attr('stroke',colors.axis);
-  g.selectAll('.grid path').attr('display','none');
-}
-
 function renderCharts(){
   const p = PREFS[chartPref];
-  const snowCard = document.getElementById('chart-snow')?.closest('.chart-card');
-  if(snowCard) snowCard.hidden = !SNOW_MODEL_PREFECTURES.has(chartPref);
-  const m = p.monthly;
-  const palette = chartBase()?.colors;
-  if(!palette) return;
-  drawD3Chart('chart-bar', m.disruption, 'bar', palette.teal, 'Overall monthly disruption score');
-  drawD3Chart('chart-typhoon', m.typhoon, 'line', palette.red, 'Typhoon seasonality');
-  drawD3Chart('chart-flood', m.flood, 'line', palette.teal, 'Heavy rain and flood risk');
-  drawD3Chart('chart-landslide', m.landslide, 'line', palette.purple, 'Landslide and mudslide risk');
-  drawD3Chart('chart-snow', m.snow, 'line', palette.blue, 'Heavy snow risk');
+  window.KikanCharts?.renderMonthlyCharts({
+    chartPref,
+    monthly: p.monthly,
+    months: activeMonthIndexes().map((index) => ({ index, label: MONTHS[index] })),
+    regionName: p.name,
+    showSnow: SNOW_MODEL_PREFECTURES.has(chartPref),
+  });
 }
-window.addEventListener('resize', ()=>{
-  if(document.getElementById('view-dataviz')?.classList.contains('active')) renderCharts();
-});
 
 /* ---------------- Home quick search and accessibility controls ---------------- */
 const homePrefList = document.getElementById('home-pref-list');
