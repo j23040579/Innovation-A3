@@ -12,7 +12,7 @@ import {
 } from "./forecastLoading";
 import {
   applyForecastTemperature,
-  applyTemperatureBackground,
+  applyTemperatureCardStatus,
   formatTemperature,
   riskStyle,
   temperatureStatusStyle,
@@ -24,6 +24,9 @@ const normalizePrefecture = (value) => String(value || "").toLowerCase().replace
 function setStatus(message, isError = false) {
   const status = document.getElementById("monitor-risk-summary");
   if (!status) return;
+  if (isError || message.startsWith("Loading")) {
+    applyTemperatureCardStatus("Unknown");
+  }
   status.textContent = message;
   status.dataset.state = isError ? "error" : "ready";
 }
@@ -195,12 +198,12 @@ async function initializeApiIntegration(root) {
   window.onKikanMapPrefectureSelect = (prefecture) => {
     const revision = ++selectionRevision;
     const period = resolveForecastPeriod(appliedPeriod, getTomorrowISODate());
-    applyTemperatureBackground("Unknown");
+    applyTemperatureCardStatus("Unknown");
     setSelectionLoading(true);
     setStatus(`Loading live weather and risk data for ${prefecture}…`);
     loadSelectionData(prefecture, period, revision).catch((error) => {
       if (isCurrentSelection(revision)) {
-        applyTemperatureBackground("Unknown");
+        applyTemperatureCardStatus("Unknown");
         setStatus(`Unable to load backend data: ${error.message}`, true);
       }
     }).finally(() => {
@@ -224,7 +227,7 @@ async function initializeApiIntegration(root) {
       appliedPeriod = period;
       const revision = ++selectionRevision;
       checkButton.disabled = true;
-      applyTemperatureBackground("Unknown");
+      applyTemperatureCardStatus("Unknown");
       setSelectionLoading(true);
       window.applyKikanRiskContext?.(prefecture, validatedPeriod);
       window.updateKikanRiskMapSelection?.({ prefecture });
@@ -237,7 +240,7 @@ async function initializeApiIntegration(root) {
         );
       } catch (error) {
         if (isCurrentSelection(revision)) {
-          applyTemperatureBackground("Unknown");
+          applyTemperatureCardStatus("Unknown");
           setStatus(`Unable to load backend data: ${error.message}`, true);
         }
       } finally {

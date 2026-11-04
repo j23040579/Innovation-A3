@@ -634,7 +634,6 @@ document.getElementById('loc-input').addEventListener('input',e=>clearPrefPrompt
 function setAccessibility(kind, enabled){
   const className = kind==='larger'?'access-large':kind==='contrast'?'access-contrast':'access-reduce-motion';
   document.body.classList.toggle(className, enabled);
-  if(kind==='contrast') document.documentElement.dataset.accessContrast = String(enabled);
   document.querySelectorAll('[data-access="'+kind+'"]').forEach(btn=>{
     btn.setAttribute('aria-pressed', String(enabled));
     const label=kind==='larger'?'Larger text':kind==='contrast'?'High contrast':'Reduced motion';
