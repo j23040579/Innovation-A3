@@ -491,9 +491,9 @@ nav.tabs button.active{color:#FFFFFF;background:var(--chart-blue);}
   --card-shadow:0 3px 12px rgba(0,0,0,.22),0 1px 3px rgba(0,0,0,.15);
   --card-shadow-hover:0 14px 30px rgba(0,0,0,.34),0 4px 9px rgba(0,0,0,.2);
 }
-html{background:var(--temperature-page-background,var(--paper));color-scheme:light;transition:background-color .35s ease,color .2s ease;}
+html{background:var(--paper);color-scheme:light;transition:background-color .2s ease,color .2s ease;}
 :root[data-theme="dark"]{color-scheme:dark;}
-body{background:var(--temperature-page-background,var(--paper))!important;color:var(--ink)!important;transition:background-color .35s ease,color .2s ease;}
+body{background:var(--paper)!important;color:var(--ink)!important;transition:background-color .2s ease,color .2s ease;}
 header.topnav{background:var(--surface)!important;border-bottom:1px solid var(--paper-line)!important;box-shadow:0 2px 10px rgba(15,23,42,.045);}
 .brand-mark{background:linear-gradient(135deg,var(--brand-blue),var(--brand-teal))!important;color:#fff!important;border-radius:50%!important;}
 .brand-name{color:var(--ink)!important;}
@@ -850,15 +850,19 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 #map-g .pref.active{fill:#2563EB!important;opacity:1!important;stroke:#1D4ED8!important;stroke-width:1.4!important;filter:drop-shadow(0 0 3px rgba(37,99,235,.65))!important;}
 :root[data-theme="dark"] #map-g .pref.active{fill:#2563EB!important;stroke:#BFDBFE!important;}
 
-/* Put the forecast tone on the root canvas, not just behind the app content. */
-html[data-temperature-status="cold"]{--temperature-page-background:#DCEEFF;}
-html[data-temperature-status="warm"]{--temperature-page-background:#FFE5CC;}
-:root[data-theme="dark"][data-temperature-status="cold"]{--temperature-page-background:#101D2D;}
-:root[data-theme="dark"][data-temperature-status="warm"]{--temperature-page-background:#2A1E14;}
-html[data-access-contrast="true"][data-temperature-status]{--temperature-page-background:#fff;}
-body{background-color:var(--temperature-page-background,var(--paper));transition:background-color .35s ease;}
-body.access-contrast[data-temperature-status]{--temperature-page-background:var(--paper);}
-@media(prefers-reduced-motion:reduce){body{transition:none!important;}}
+/* Temperature tones are confined to the full Weather monitoring card. */
+.monitor[data-temperature-status="cold"]{background:#DCEEFF!important;border-color:#93C5FD;}
+.monitor[data-temperature-status="warm"]{background:#FFE5CC!important;border-color:#FDBA74;}
+.monitor[data-temperature-status="cold"] .temperature-only,
+.monitor[data-temperature-status="cold"] .monitor-summary,
+.monitor[data-temperature-status="warm"] .temperature-only,
+.monitor[data-temperature-status="warm"] .monitor-summary{background:transparent!important;}
+.monitor[data-temperature-status="cold"] .monitor-summary{border-left-color:#2563EB;}
+.monitor[data-temperature-status="warm"] .monitor-summary{border-left-color:#C2410C;}
+:root[data-theme="dark"] .monitor[data-temperature-status="cold"]{background:#172B43!important;border-color:#3B82F6;}
+:root[data-theme="dark"] .monitor[data-temperature-status="warm"]{background:#382519!important;border-color:#F97316;}
+body.access-contrast .monitor[data-temperature-status]{background:var(--surface)!important;border-color:#526071;}
+@media(prefers-reduced-motion:reduce){.monitor{transition:none!important;}}
 
 [data-forecast-loading="true"]{
   animation:forecast-refresh-pulse 1.4s ease-in-out infinite;

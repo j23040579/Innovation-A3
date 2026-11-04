@@ -72,18 +72,26 @@ export function temperatureBackgroundTone(level) {
   return "neutral";
 }
 
-export function applyTemperatureBackground(level, body = document.body) {
+export function applyTemperatureCardStatus(
+  level,
+  card = document.getElementById("monitor-card"),
+) {
   const tone = temperatureBackgroundTone(level);
-  body.dataset.temperatureStatus = tone;
-  const page = body.ownerDocument?.documentElement;
-  if (page) page.dataset.temperatureStatus = tone;
+  const page = card?.ownerDocument;
+  if (page?.body) delete page.body.dataset.temperatureStatus;
+  if (page?.documentElement) delete page.documentElement.dataset.temperatureStatus;
+  if (card) card.dataset.temperatureStatus = tone;
 }
 
-export function applyForecastTemperature(prediction, daily, body = document.body) {
+export function applyForecastTemperature(
+  prediction,
+  daily,
+  card = document.getElementById("monitor-card"),
+) {
   const tempRisk = prediction.risks?.find((risk) => risk.hazard === "temperature");
   const temperature =
     tempRisk?.predicted_value ?? daily.metrics?.temperature_2m_max ?? daily.metrics?.temperature_mean;
   const temperatureStatus = tempRisk?.risk_level || classifyTemperature(temperature);
-  applyTemperatureBackground(temperatureStatus, body);
+  applyTemperatureCardStatus(temperatureStatus, card);
   return { temperature, temperatureStatus };
 }

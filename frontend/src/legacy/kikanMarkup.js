@@ -70,7 +70,7 @@ export const kikanMarkup = `<header class="topnav">
 <button class="btn btn-primary" id="check-risk-btn">Check risk</button>
 </div>
 <div class="row-3">
-  <div class="card monitor">
+  <div class="card monitor" id="monitor-card">
     <div class="monitor-heading">
       <div>
         <h3>Weather monitoring mode</h3>
