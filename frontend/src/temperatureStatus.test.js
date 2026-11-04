@@ -55,4 +55,9 @@ test("page background uses theme-aware cold and warm colors and respects contras
   assert.match(stylesheet, /:root\[data-theme="dark"\] body\[data-temperature-status="cold"\]/);
   assert.match(stylesheet, /:root\[data-theme="dark"\] body\[data-temperature-status="warm"\]/);
   assert.match(stylesheet, /body\.access-contrast\[data-temperature-status\]\{--temperature-page-background:var\(--paper\);\}/);
+  assert.match(stylesheet, /body\{background:var\(--temperature-page-background,var\(--paper\)\)!important;color:var\(--ink\)!important;/);
+  assert.match(stylesheet, /\.risk-cold,[^{]+\{color:#2563EB!important;\}/);
+  assert.match(stylesheet, /\.risk-warm,[^{]+\{color:#C2410C!important;\}/);
+  assert.doesNotMatch(stylesheet, /\.risk-(?:cold|warm),[^{]+\{[^}]*background:/);
+  assert.doesNotMatch(stylesheet, /\.risk-(?:cold|warm),[^{]+\{[^}]*border:/);
 });
