@@ -599,13 +599,20 @@ regionSelect.addEventListener('change', ()=>{
 
 function renderCharts(){
   const p = PREFS[chartPref];
+  if (!p) return;
+
   window.KikanCharts?.renderMonthlyCharts({
     chartPref,
     monthly: p.monthly,
-    months: activeMonthIndexes().map((index) => ({ index, label: MONTHS[index] })),
+    months: activeMonthIndexes().map((index) => ({
+      index,
+      label: MONTHS[index],
+    })),
     regionName: p.name,
     showSnow: SNOW_MODEL_PREFECTURES.has(chartPref),
   });
+
+  window.onKikanDatavizRegion?.(p.name);
 }
 
 /* ---------------- Home quick search and accessibility controls ---------------- */

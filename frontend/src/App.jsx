@@ -195,6 +195,35 @@ async function initializeApiIntegration(root) {
     });
   }
 
+  
+  // Load real weather data for Data Visualization charts
+  let datavizRevision = 0;
+
+  window.onKikanDatavizRegion = async (prefecture) => {
+  const revision = ++datavizRevision;
+
+  try {
+    const result = await api.getTimeseries({
+      prefecture,
+      startDate: "2026-02-01",
+      endDate: "2027-01-31",
+    });
+
+    if (revision !== datavizRevision) return;
+
+    d3Charts.renderTimeseriesCharts(result.series || []);
+  } catch (error) {
+    if (revision !== datavizRevision) return;
+    console.error("Data Visualization charts failed:", error);
+  }
+};
+
+window.onKikanDatavizRegion("Tokyo");
+
+if (selectedRegion?.value) {
+  window.onKikanDatavizRegion(selectedRegion.selectedOptions[0]?.textContent?.trim() || "Tokyo");
+}
+
   window.onKikanMapPrefectureSelect = (prefecture) => {
     const revision = ++selectionRevision;
     const period = resolveForecastPeriod(appliedPeriod, getTomorrowISODate());

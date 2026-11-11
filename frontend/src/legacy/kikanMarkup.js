@@ -215,20 +215,87 @@ export const kikanMarkup = `<header class="topnav">
 </div>
 <div class="viz-2col">
 <div class="card chart-card">
-<div class="chart-heading"><h3>Typhoon seasonality</h3><div class="chart-actions" aria-label="Chart zoom controls"><button type="button" data-chart-action="out" data-chart-id="chart-typhoon" aria-label="Zoom out on typhoon chart">−</button><button type="button" data-chart-action="in" data-chart-id="chart-typhoon" aria-label="Zoom in on typhoon chart">+</button><button type="button" data-chart-action="reset" data-chart-id="chart-typhoon" aria-label="Reset typhoon chart zoom">Reset</button></div></div>
-<div class="sub">Frequency score (0–100) by month</div>
-<div class="chart-wrap"><div id="chart-typhoon" class="d3-chart" role="img" aria-label="Typhoon seasonality line chart"></div></div>
-</div>
-<div class="card chart-card">
-<div class="chart-heading"><h3>Heavy rain &amp; flood</h3><div class="chart-actions" aria-label="Chart zoom controls"><button type="button" data-chart-action="out" data-chart-id="chart-flood" aria-label="Zoom out on flood chart">−</button><button type="button" data-chart-action="in" data-chart-id="chart-flood" aria-label="Zoom in on flood chart">+</button><button type="button" data-chart-action="reset" data-chart-id="chart-flood" aria-label="Reset flood chart zoom">Reset</button></div></div>
-<div class="sub">Risk score (0–100) by month</div>
-<div class="chart-wrap"><div id="chart-flood" class="d3-chart" role="img" aria-label="Heavy rain and flood risk line chart"></div></div>
+  <div class="chart-heading">
+    <h3>Typhoon Seasonality</h3>
+    <div class="chart-actions" aria-label="Chart zoom controls">
+      <button type="button" data-chart-action="out" data-chart-id="chart-typhoon" aria-label="Zoom out on typhoon chart">−</button>
+      <button type="button" data-chart-action="in" data-chart-id="chart-typhoon" aria-label="Zoom in on typhoon chart">+</button>
+      <button type="button" data-chart-action="reset" data-chart-id="chart-typhoon" aria-label="Reset typhoon chart zoom">Reset</button>
+    </div>
+  </div>
+
+  <div class="sub">Monthly maximum wind speed (km/h)</div>
+
+  <div class="chart-wrap">
+    <div id="chart-typhoon" class="d3-chart" role="img" aria-label="Monthly maximum wind speed line chart"></div>
+  </div>
+
+  <p class="chart-explanation">
+    Shows monthly maximum wind speed. The red dot highlights the month with the strongest wind.
+  </p>
 </div>
 
 <div class="card chart-card">
-<div class="chart-heading"><h3>Heavy snow</h3><div class="chart-actions" aria-label="Chart zoom controls"><button type="button" data-chart-action="out" data-chart-id="chart-snow" aria-label="Zoom out on snow chart">−</button><button type="button" data-chart-action="in" data-chart-id="chart-snow" aria-label="Zoom in on snow chart">+</button><button type="button" data-chart-action="reset" data-chart-id="chart-snow" aria-label="Reset snow chart zoom">Reset</button></div></div>
-<div class="sub">Risk score (0–100) by month</div>
-<div class="chart-wrap"><div id="chart-snow" class="d3-chart" role="img" aria-label="Heavy snow risk line chart"></div></div>
+  <div class="chart-heading">
+    <h3>Heavy Rain &amp; Flood</h3>
+    <div class="chart-actions" aria-label="Chart zoom controls">
+      <button type="button" data-chart-action="out" data-chart-id="chart-flood" aria-label="Zoom out on flood chart">−</button>
+      <button type="button" data-chart-action="in" data-chart-id="chart-flood" aria-label="Zoom in on flood chart">+</button>
+      <button type="button" data-chart-action="reset" data-chart-id="chart-flood" aria-label="Reset flood chart zoom">Reset</button>
+    </div>
+  </div>
+
+  <div class="sub">Daily rainfall (mm)</div>
+
+  <div class="chart-wrap">
+    <div id="chart-flood" class="d3-chart" role="img" aria-label="Daily rainfall area chart"></div>
+  </div>
+
+  <p class="chart-explanation">
+    Shows daily rainfall trends, helping travellers identify periods with higher rainfall.
+  </p>
+</div>
+
+<div class="card chart-card">
+  <div class="chart-heading">
+    <h3>Landslide &amp; Mudslide</h3>
+    <div class="chart-actions" aria-label="Chart zoom controls">
+      <button type="button" data-chart-action="out" data-chart-id="chart-landslide" aria-label="Zoom out on landslide chart">−</button>
+      <button type="button" data-chart-action="in" data-chart-id="chart-landslide" aria-label="Zoom in on landslide chart">+</button>
+      <button type="button" data-chart-action="reset" data-chart-id="chart-landslide" aria-label="Reset landslide chart zoom">Reset</button>
+    </div>
+  </div>
+
+  <div class="sub">Cumulative rainfall (mm)</div>
+
+  <div class="chart-wrap">
+    <div id="chart-landslide" class="d3-chart" role="img" aria-label="Cumulative rainfall waterfall chart"></div>
+  </div>
+
+  <p class="chart-explanation">
+    Shows how rainfall accumulates over consecutive days. Each bar represents the rainfall added that day.
+  </p>
+</div>
+
+<div class="card chart-card">
+  <div class="chart-heading">
+    <h3>Heavy Snow &amp; Blizzard</h3>
+    <div class="chart-actions" aria-label="Chart zoom controls">
+      <button type="button" data-chart-action="out" data-chart-id="chart-snow" aria-label="Zoom out on snow chart">−</button>
+      <button type="button" data-chart-action="in" data-chart-id="chart-snow" aria-label="Zoom in on snow chart">+</button>
+      <button type="button" data-chart-action="reset" data-chart-id="chart-snow" aria-label="Reset snow chart zoom">Reset</button>
+    </div>
+  </div>
+
+  <div class="sub">Temperature vs Snowfall</div>
+
+  <div class="chart-wrap">
+    <div id="chart-snow" class="d3-chart" role="img" aria-label="Temperature and snowfall scatter plot"></div>
+  </div>
+
+  <p class="chart-explanation">
+    Shows the relationship between temperature and snowfall. Each dot represents one day, while the red dashed line shows the overall trend.
+  </p>
 </div>
 </div>
 </div>
