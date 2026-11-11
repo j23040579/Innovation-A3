@@ -30,9 +30,9 @@ export const kikanMarkup = `<header class="topnav">
 <section class="view active" id="view-home" aria-labelledby="home-title">
 <div class="home-tools card" aria-label="Quick prefecture search">
   <div class="quick-search">
-    <label for="home-pref-search">Find a prefecture</label>
+    <label for="home-pref-search">Find a prefecture evacuation</label>
     <div class="quick-search-row"><input id="home-pref-search" list="home-pref-list" placeholder="Search Japan by prefecture" autocomplete="off"/><datalist id="home-pref-list"></datalist><button class="btn btn-primary" id="home-search-btn" type="button">Check risk</button></div>
-    <p class="helper-text">Choose a prefecture to open its risk summary and map.</p>
+    <p class="helper-text">Choose a prefecture to open map.</p>
   </div>
 
 </div>
