@@ -1,4 +1,3 @@
-
 import * as d3 from "d3";
 
 import { drawAxes, gridLines, tickDates } from "./chartHelpers.js";
