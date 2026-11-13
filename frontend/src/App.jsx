@@ -17,55 +17,64 @@ import {
   riskStyle,
   temperatureStatusStyle,
 } from "./temperatureStatus";
+import {
+  hazardCardPresentation,
+  hazardMapColor,
+  isSnowMapPrediction,
+  mapHazardsForPrefecture,
+  mapLegendTitle,
+  nextMapHazardForPrefecture,
+  normalizePrefecture,
+  shouldShowHazardCard,
+} from "./hazardPresentation";
 import "./legacy/kikan.css";
 
-const normalizePrefecture = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-
 function setStatus(message, isError = false) {
-  const status = document.getElementById("monitor-risk-summary");
+  const status = document.getElementById("forecast-status");
   if (!status) return;
+  const isTransient = isError || message.startsWith("Loading");
+  if (!isTransient) {
+    status.textContent = "";
+    status.hidden = true;
+    delete status.dataset.state;
+    return;
+  }
   if (isError || message.startsWith("Loading")) {
     applyTemperatureCardStatus("Unknown");
   }
   status.textContent = message;
   status.dataset.state = isError ? "error" : "ready";
+  status.hidden = false;
 }
 
-function renderRisks(risks = []) {
+function renderRisks(risks = [], prefecture) {
   const grid = document.getElementById("hazard-grid");
   if (!grid) return;
   grid.replaceChildren();
   risks
     .filter((risk) => !["wind", "rain"].includes(String(risk.hazard || "").trim().toLowerCase()))
+    .filter((risk) => shouldShowHazardCard(risk, prefecture))
     .forEach((risk) => {
+      const presentation = hazardCardPresentation(risk);
       const style =
         risk.hazard === "temperature"
-          ? temperatureStatusStyle(risk.risk_level)
-          : riskStyle(risk.risk_level);
-      const profileProbabilities = risk.profile_match_probabilities;
+          ? temperatureStatusStyle(presentation.level)
+          : riskStyle(presentation.level);
       const card = document.createElement("div");
       card.className = "card hazard";
       const top = document.createElement("div");
       top.className = "hazard-top";
       const name = document.createElement("span");
       name.className = "hazard-name";
-      name.textContent = risk.hazard || "Unknown hazard";
+      name.textContent = `${presentation.icon} ${presentation.name}`;
       const level = document.createElement("span");
       level.className = `hazard-level ${style.className}`;
       level.textContent =
         risk.hazard === "temperature" && risk.predicted_value != null
-          ? formatTemperature(risk.predicted_value, risk.risk_level)
-          : risk.risk_level || "Unknown";
+          ? formatTemperature(risk.predicted_value, presentation.level)
+          : presentation.level;
       top.append(name, level);
-      const message = document.createElement("small");
-      message.textContent = risk.alert_message || "Live backend prediction";
-      if (profileProbabilities) {
-        const profileLabel = document.createElement("small");
-        profileLabel.textContent = "Landfall profile match (not typhoon occurrence probability)";
-        card.append(top, profileLabel, message);
-      } else {
-        card.append(top, message);
-      }
+      card.append(top);
       grid.appendChild(card);
     });
 }
@@ -75,79 +84,38 @@ function renderTimeseries(series = []) {
 }
 
 function applyMapOverview(items = []) {
-  window.updateKikanSnowMapData?.(items);
-  if (document.getElementById("map-hazard-select")?.value === "snow") return;
-  const byPrefecture = new Map(items.map((item) => [normalizePrefecture(item.prefecture), item]));
-  document.querySelectorAll(".pref").forEach((path) => {
-    const item =
-      byPrefecture.get(normalizePrefecture(path.getAttribute("aria-label"))) ||
-      byPrefecture.get(normalizePrefecture(path.dataset.id));
-    if (!item) return;
-    const style = riskStyle(item.primary_risk_level);
-    path.style.fill = style.color;
-    path.style.opacity = "0.85";
-    path.style.stroke = "#FFFFFF";
-  });
+  window.updateKikanMapPredictions?.(items);
 }
 
 async function loadMapOverview(date, isCurrent = () => true) {
   const [map, snowCoverage] = await Promise.all([api.getMapOverview(date), api.getSnowCoverage()]);
   if (!isCurrent()) return;
   const coverage = new Set(snowCoverage.map(normalizePrefecture));
-  const supportedSnowPrefectures = map.items
-    .map((item) => item.prefecture)
-    .filter((prefecture) => coverage.has(normalizePrefecture(prefecture)));
-  const [snowPredictions, rainPredictions] = await Promise.all([
-    Promise.all(
-      supportedSnowPrefectures.map(async (prefecture) => {
-        try {
-          const prediction = await api.predict({ prefecture, date, hazards: ["snow"] });
-          const snowRisk = prediction.risks?.find((risk) => risk.hazard === "snow");
-          return [
-            normalizePrefecture(prefecture),
-            {
-              execution_mode: prediction.execution_mode,
-              risk_level: snowRisk?.risk_level,
-            },
-          ];
-        } catch (error) {
-          if (error.status === 404) return [normalizePrefecture(prefecture), null];
-          throw error;
-        }
-      }),
-    ),
-    Promise.all(
-      map.items.map(async ({ prefecture }) => {
-        try {
-          const prediction = await api.predict({ prefecture, date, hazards: ["rain"] });
-          const rainRisk = prediction.risks?.find((risk) => risk.hazard === "rain");
-          return [
-            normalizePrefecture(prefecture),
-            {
-              execution_mode: prediction.execution_mode,
-              risk_level: rainRisk?.risk_level,
-              predicted_value: rainRisk?.predicted_value,
-              unit: rainRisk?.unit,
-            },
-          ];
-        } catch (error) {
-          if (error.status === 404) return [normalizePrefecture(prefecture), null];
-          throw error;
-        }
-      }),
-    ),
-  ]);
-  const snowByPrefecture = new Map(snowPredictions);
-  const rainByPrefecture = new Map(rainPredictions);
+  const predictionsByPrefecture = await Promise.all(
+    map.items.map(async ({ prefecture }) => {
+      const hazards = mapHazardsForPrefecture(prefecture, coverage);
+      try {
+        const prediction = await api.predict({ prefecture, date, hazards });
+        const risks = Object.fromEntries(
+          (prediction.risks || []).map((risk) => [
+            risk.hazard,
+            { ...risk, execution_mode: prediction.execution_mode },
+          ]),
+        );
+        return [normalizePrefecture(prefecture), risks];
+      } catch (error) {
+        if (error.status === 404) return [normalizePrefecture(prefecture), {}];
+        throw error;
+      }
+    }),
+  );
+  const predictions = new Map(predictionsByPrefecture);
   if (!isCurrent()) return;
   const items = map.items.map((item) => ({
     ...item,
-    snow_prediction: snowByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
-    rain_prediction: rainByPrefecture.get(normalizePrefecture(item.prefecture)) || null,
+    hazard_predictions: predictions.get(normalizePrefecture(item.prefecture)) || {},
   }));
   applyMapOverview(items);
-  window.updateKikanMapOverviewData?.(items);
-  window.updateKikanRainMapData?.(items);
 }
 
 async function initializeApiIntegration(root) {
@@ -170,7 +138,7 @@ async function initializeApiIntegration(root) {
     ]);
     if (!isCurrentSelection(revision)) return;
 
-    renderRisks(prediction.risks);
+    renderRisks(prediction.risks, prefecture);
     renderTimeseries(timeseries.series);
     const { temperature, temperatureStatus } = applyForecastTemperature(prediction, daily);
     const tempEl = document.getElementById("stat-temp");
@@ -183,9 +151,6 @@ async function initializeApiIntegration(root) {
     }
     document.getElementById("map-summary-name").textContent = prefecture;
     document.getElementById("map-summary-hazard").textContent = prediction.overall_risk_level || "Unknown";
-    setStatus(
-      `Live backend data loaded for ${prefecture} (${prediction.execution_mode || "backend"} mode).`,
-    );
     const selectedPrefecture = prediction.prefecture || prefecture;
     await loadMapOverview(endDate, () => isCurrentSelection(revision));
     if (!isCurrentSelection(revision)) return;
@@ -193,9 +158,10 @@ async function initializeApiIntegration(root) {
       prefecture: selectedPrefecture,
       riskLevel: prediction.overall_risk_level,
     });
+    setStatus("");
   }
 
-  
+
   // Load real weather data for Data Visualization charts
   let datavizRevision = 0;
 
@@ -220,9 +186,8 @@ async function initializeApiIntegration(root) {
 
 window.onKikanDatavizRegion("Tokyo");
 
-if (selectedRegion?.value) {
-  window.onKikanDatavizRegion(selectedRegion.selectedOptions[0]?.textContent?.trim() || "Tokyo");
-}
+const selectedRegion = root.querySelector("#region-select");
+if (selectedRegion?.value) window.onKikanDatavizRegion(selectedRegion.selectedOptions[0]?.textContent?.trim() || "Tokyo");
 
   window.onKikanMapPrefectureSelect = (prefecture) => {
     const revision = ++selectionRevision;
@@ -325,6 +290,12 @@ export default function App() {
     rootRef.current.innerHTML = kikanMarkup;
     window.d3 = d3;
     window.KikanCharts = d3Charts;
+    window.KikanMapHelpers = {
+      hazardMapColor,
+      isSnowMapPrediction,
+      mapLegendTitle,
+      nextMapHazardForPrefecture,
+    };
     new Function(kikanLegacy)();
     initializeApiIntegration(rootRef.current).catch((error) => {
       setStatus(`Backend connection unavailable: ${error.message}`, true);

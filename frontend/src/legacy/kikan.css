@@ -247,24 +247,14 @@
   .lvl-high{ background:var(--red-soft); color:#E88A76; }
   .section-head{ display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:30px 0 14px; }
   .section-head .section-label{ margin:0; }
-  .tips-toggle{ font-family:var(--font-body); font-weight:600; font-size:12.5px; padding:6px 12px; border-radius:8px; border:1px solid #BBD8D8; background:var(--teal-soft); color:var(--teal); cursor:pointer; }
-  .tips-toggle:hover{ background:#E2F0F0; }
-  .tips-toggle:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
-  .tips-caret{ display:inline-block; transition:transform .2s; }
-  .tips-toggle[aria-expanded="true"] .tips-caret{ transform:rotate(180deg); }
-  .tips-panel{ background:var(--surface); border:1px solid var(--paper-line); border-radius:14px; padding:16px 18px; margin-bottom:16px; }
-  .tips-panel[hidden]{ display:none; }
-  .tips-title{ font-family:var(--font-display); font-weight:700; font-size:14px; margin-bottom:8px; }
-  .tips-panel ul{ margin:0; padding-left:18px; font-size:13.5px; color:var(--body-muted); line-height:1.55; }
-  .tips-panel li{ margin-bottom:5px; }
-  .tips-emergency{ margin-top:12px; padding:9px 12px; background:var(--paper); border-radius:8px; font-size:12px; color:var(--body-muted); line-height:1.5; }
-
   /* ---------- Map section ---------- */
   .map-risk-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px;background:#fff;border:1px solid var(--paper-line);border-radius:12px;margin:18px 0 12px;}
   .map-risk-summary>div{display:flex;flex-direction:column;gap:5px;min-width:0;}
   .summary-kicker{font-size:11px;color:#526071;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
   .map-risk-summary strong{font-size:15px;overflow-wrap:anywhere;}
   .map-data-note,.data-notice{font-size:12.5px;line-height:1.5;color:var(--body-muted);background:#FFF8E8;border:1px solid #D8B46B;border-radius:9px;padding:10px 12px;margin:8px 0 12px;}
+  .forecast-status{font-size:12.5px;line-height:1.5;color:var(--body-muted);background:var(--surface);border:1px solid var(--paper-line);border-radius:9px;padding:10px 12px;margin:0 0 16px;}
+  .forecast-status[data-state="error"]{color:#991B1B;background:var(--red-soft);border-color:#FCA5A5;}
   .map-shell{
     display:grid; grid-template-columns:1.3fr 1fr; gap:0; margin-top:14px;
     border:1px solid var(--paper-line); border-radius:14px; overflow:hidden;
@@ -363,7 +353,6 @@
   /* ---------- Real map + zoom ---------- */
   #map-g .pref{ fill:#477D79; stroke:#1B2430; stroke-width:1; cursor:pointer; transition:fill .15s; -webkit-tap-highlight-color:transparent; }
   #map-g .pref:hover{ fill:#3D4A60; }
-  #map-g .pref.active{ fill:var(--amber); }
   #map-g .pref:focus{ outline:none; }
   #map-g .pref:focus-visible{ outline:2px solid var(--amber); outline-offset:1px; }
   #zoom-g{ transition:transform .25s ease; }
@@ -407,14 +396,11 @@
 /* Theme-aware details, map, and charts */
 :root[data-theme="dark"] body{background:var(--paper);color:var(--ink);}
 :root[data-theme="dark"] h1,:root[data-theme="dark"] h2,:root[data-theme="dark"] h3{color:var(--ink);}
-:root[data-theme="dark"] .home-card,:root[data-theme="dark"] .card,:root[data-theme="dark"] .search-row,:root[data-theme="dark"] .tips-panel,:root[data-theme="dark"] .map-risk-summary,:root[data-theme="dark"] .shelter-pane{background:var(--surface);border-color:var(--paper-line);}
+:root[data-theme="dark"] .home-card,:root[data-theme="dark"] .card,:root[data-theme="dark"] .search-row,:root[data-theme="dark"] .map-risk-summary,:root[data-theme="dark"] .shelter-pane{background:var(--surface);border-color:var(--paper-line);}
 :root[data-theme="dark"] .home-card p,:root[data-theme="dark"] .page-head p,:root[data-theme="dark"] .status-card p,:root[data-theme="dark"] .shelter .note,:root[data-theme="dark"] .place .note,:root[data-theme="dark"] .predicts p,:root[data-theme="dark"] .route-meta{color:var(--body-muted);}
 :root[data-theme="dark"] .field input,:root[data-theme="dark"] .field select,:root[data-theme="dark"] .viz-controls select,:root[data-theme="dark"] .quick-search-row input{background:#111827;color:#F3F6FA;border-color:#526071;}
 :root[data-theme="dark"] .map-pane{background:#111827;}
 :root[data-theme="dark"] .map-data-note,:root[data-theme="dark"] .data-notice{background:#382D19;color:#FDECC8;border-color:#8B6B32;}
-:root[data-theme="dark"] .tips-toggle{border-color:#356B68;background:#123D3A;color:#8CF0E0;}
-:root[data-theme="dark"] .tips-toggle:hover{background:#194C48;}
-:root[data-theme="dark"] .tips-panel ul{color:#D1D9E5;}
 :root[data-theme="dark"] .stat{background:var(--surface-raised);}
 :root[data-theme="dark"] .status-card.warn .tag{color:#FBBF59;}
 :root[data-theme="dark"] .status-card.danger .tag{color:#FDA4A4;}
@@ -430,7 +416,7 @@
 
 
 /* Kikan Japanese-inspired design system: restrained blue/teal UI, three risk levels. */
-.home-card:hover,.card:hover,.tips-panel:hover,.shelter-pane:hover{box-shadow:var(--card-shadow-hover);}
+.home-card:hover,.card:hover,.shelter-pane:hover{box-shadow:var(--card-shadow-hover);}
 .home-card:focus-within,.card:focus-within{border-color:var(--chart-blue);}
 .hero{background:linear-gradient(125deg,#0F172A 0%,#172554 58%,#164E63 100%);box-shadow:var(--card-shadow-hover);}
 .hero::after{background:radial-gradient(circle,rgba(96,165,250,.20),transparent 70%);}
@@ -441,9 +427,8 @@ nav.tabs button.active{color:#FFFFFF;background:var(--chart-blue);}
 .lvl-low{background:var(--teal-soft);color:#065F59;}
 .lvl-medium{background:var(--amber-soft);color:#92400E;}
 .lvl-high{background:var(--red-soft);color:#991B1B;}
-.legend-swatch.low{background:#22C55E}.legend-swatch.medium{background:#F59E0B}.legend-swatch.high{background:#EF4444}
+.legend-swatch.low{background:#FED7AA}.legend-swatch.medium{background:#F59E0B}.legend-swatch.high{background:#C2410C}
 #map-g .pref{stroke:var(--paper);}
-#map-g .pref.active{fill:var(--chart-blue);}
 #map-g .pref:hover{filter:brightness(1.08);}
 :root[data-theme="dark"] .lvl-low{background:#123D3A;color:#5EEAD4;}
 :root[data-theme="dark"] .lvl-medium{background:#422F0B;color:#FBBF24;}
@@ -453,7 +438,7 @@ nav.tabs button.active{color:#FFFFFF;background:var(--chart-blue);}
 :root[data-theme="dark"] #map-g .pref{stroke:#0B1220;}
 :root[data-theme="dark"] .map-pane{background:#111827;}
 :root[data-theme="dark"] .btn-primary{background:#2563EB;color:#FFFFFF;}
-@media(prefers-reduced-motion:reduce){.home-card,.card,.tips-panel,.shelter-pane{transition:none!important}.home-card:hover,.card:hover,.tips-panel:hover,.shelter-pane:hover{transform:none!important}}
+@media(prefers-reduced-motion:reduce){.home-card,.card,.shelter-pane{transition:none!important}.home-card:hover,.card:hover,.shelter-pane:hover{transform:none!important}}
 
 
 /* ---------- Kikan Japanese-inspired theme corrections ---------- */
@@ -556,7 +541,6 @@ input::placeholder{color:var(--text-lo)!important;opacity:1;}
 .monitor{width:100%;min-width:0;}
 .monitor-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
 .monitor-badge{font-size:12px;font-weight:800;padding:6px 10px;border-radius:99px;white-space:nowrap;}
-.monitor-summary{margin-top:14px;padding:11px 13px;border-left:3px solid var(--brand-blue);border-radius:7px;background:var(--surface-raised);color:var(--body-muted);font-size:13px;line-height:1.5;}
 #map-g .pref{transition:fill .15s,opacity .15s,stroke-width .15s;}
 #map-g .pref:not(.active){cursor:pointer;}
 #map-g .pref.active{opacity:1!important;filter:drop-shadow(0 0 1.3px rgba(37,99,235,.7));}
@@ -570,7 +554,6 @@ input::placeholder{color:var(--text-lo)!important;opacity:1;}
 .chart-actions button{min-width:30px;min-height:28px;padding:4px 8px;border:1px solid var(--paper-line);border-radius:7px;background:var(--surface);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;}
 .chart-actions button:hover:not(:disabled){background:var(--surface-raised);border-color:var(--brand-blue);}
 .chart-actions button:disabled{opacity:.4;cursor:not-allowed;}
-:root[data-theme="dark"] .monitor-summary{background:#1F2937;color:#D1D5DB;border-left-color:#60A5FA;}
 :root[data-theme="dark"] .site-menu{box-shadow:0 18px 42px rgba(0,0,0,.45);}
 :root[data-theme="dark"] .site-menu nav.tabs button{color:var(--ink)!important;}
 :root[data-theme="dark"] .chart-actions button{background:var(--surface);color:var(--ink);border-color:var(--paper-line);}
@@ -588,7 +571,6 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 
 :root[data-theme="dark"] body.access-contrast{background:#050914!important;color:#FFFFFF!important;--paper:#050914!important;--surface:#0B1220!important;--ink:#FFFFFF!important;--text-lo:#F3F4F6!important;--body-muted:#F3F4F6!important;--paper-line:#CBD5E1!important;--surface-raised:#1F2937!important;}
 :root[data-theme="dark"] body.access-contrast .card,:root[data-theme="dark"] body.access-contrast .home-card,:root[data-theme="dark"] body.access-contrast .shelter-pane,:root[data-theme="dark"] body.access-contrast .site-menu{background:#0B1220!important;color:#FFFFFF!important;}
-:root[data-theme="dark"] body.access-contrast .monitor-summary{background:#1F2937!important;color:#FFFFFF!important;}
 
 /* Keep the map and the places/shelters list as separate content-sized cards. This avoids stretching a short list into a large empty panel on wide screens. */
 .map-shell{
@@ -847,18 +829,12 @@ body.access-contrast .brand-sub,body.access-contrast .map-caption,body.access-co
 .monitor .temperature-stat-row{display:flex;width:100%;margin-top:18px;}
 .monitor .temperature-only{flex:1 1 100%;width:100%;max-width:none;min-height:132px;display:flex;flex-direction:column;justify-content:center;align-items:center;box-sizing:border-box;}
 .monitor .temperature-only .v{font-size:clamp(20px,3.2vw,32px);text-align:center;line-height:1.3;max-width:100%;padding:0 12px;overflow-wrap:anywhere;}
-#map-g .pref.active{fill:#2563EB!important;opacity:1!important;stroke:#1D4ED8!important;stroke-width:1.4!important;filter:drop-shadow(0 0 3px rgba(37,99,235,.65))!important;}
-:root[data-theme="dark"] #map-g .pref.active{fill:#2563EB!important;stroke:#BFDBFE!important;}
 
 /* Temperature tones are confined to the full Weather monitoring card. */
 .monitor[data-temperature-status="cold"]{background:#DCEEFF!important;border-color:#93C5FD;}
 .monitor[data-temperature-status="warm"]{background:#FFE5CC!important;border-color:#FDBA74;}
 .monitor[data-temperature-status="cold"] .temperature-only,
-.monitor[data-temperature-status="cold"] .monitor-summary,
-.monitor[data-temperature-status="warm"] .temperature-only,
-.monitor[data-temperature-status="warm"] .monitor-summary{background:transparent!important;}
-.monitor[data-temperature-status="cold"] .monitor-summary{border-left-color:#2563EB;}
-.monitor[data-temperature-status="warm"] .monitor-summary{border-left-color:#C2410C;}
+.monitor[data-temperature-status="warm"] .temperature-only{background:transparent!important;}
 :root[data-theme="dark"] .monitor[data-temperature-status="cold"]{background:#172B43!important;border-color:#3B82F6;}
 :root[data-theme="dark"] .monitor[data-temperature-status="warm"]{background:#382519!important;border-color:#F97316;}
 body.access-contrast .monitor[data-temperature-status]{background:var(--surface)!important;border-color:#526071;}
