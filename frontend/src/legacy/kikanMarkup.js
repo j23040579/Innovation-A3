@@ -69,6 +69,7 @@ export const kikanMarkup = `<header class="topnav">
 </div>
 <button class="btn btn-primary" id="check-risk-btn">Check risk</button>
 </div>
+<p class="forecast-status" id="forecast-status" role="status" aria-live="polite" hidden></p>
 <div class="row-3">
   <div class="card monitor" id="monitor-card">
     <div class="monitor-heading">
@@ -80,22 +81,10 @@ export const kikanMarkup = `<header class="topnav">
     <div class="temperature-stat-row">
       <div class="stat temperature-only"><div class="v" id="stat-temp">16.00°C (Cold)</div><div class="l">Temperature</div></div>
     </div>
-    <p class="monitor-summary" id="monitor-risk-summary" role="status" aria-live="polite">Prototype risk summary: check the hazard breakdown below. These values are not live forecasts.</p>
   </div>
 </div>
 <div class="section-head">
 <div class="section-label">Seasonal hazard analysis</div>
-<button aria-controls="tips-panel" aria-expanded="false" class="tips-toggle" id="tips-btn" type="button">Safety tips <span class="tips-caret">▾</span></button>
-</div>
-<div class="tips-panel" hidden="" id="tips-panel">
-<div class="tips-title">Safety tips for tourists</div>
-<ul>
-<li>Ask your hotel staff about local risks and evacuation routes when you check in.</li>
-<li>Stay away from rivers, the coast and steep slopes, and don’t go out to check on conditions.</li>
-<li>Charge your phone and power bank, and keep water, snacks and a torch at your accommodation.</li>
-<li>Find your nearest evacuation shelter and keep your itinerary flexible.</li>
-</ul>
-<div class="tips-emergency">Emergency: <strong>110</strong> police · <strong>119</strong> fire &amp; ambulance · Japan Visitor Hotline <strong>050-3816-2787</strong> (24 h; English, Chinese, Korean)</div>
 </div>
 <div class="hazard-grid" id="hazard-grid"></div>
 <div class="map-risk-summary" id="map-risk-summary" role="status" aria-live="polite">
@@ -253,27 +242,6 @@ export const kikanMarkup = `<header class="topnav">
 
   <p class="chart-explanation">
     Shows daily rainfall trends, helping travellers identify periods with higher rainfall.
-  </p>
-</div>
-
-<div class="card chart-card">
-  <div class="chart-heading">
-    <h3>Landslide &amp; Mudslide</h3>
-    <div class="chart-actions" aria-label="Chart zoom controls">
-      <button type="button" data-chart-action="out" data-chart-id="chart-landslide" aria-label="Zoom out on landslide chart">−</button>
-      <button type="button" data-chart-action="in" data-chart-id="chart-landslide" aria-label="Zoom in on landslide chart">+</button>
-      <button type="button" data-chart-action="reset" data-chart-id="chart-landslide" aria-label="Reset landslide chart zoom">Reset</button>
-    </div>
-  </div>
-
-  <div class="sub">Cumulative rainfall (mm)</div>
-
-  <div class="chart-wrap">
-    <div id="chart-landslide" class="d3-chart" role="img" aria-label="Cumulative rainfall waterfall chart"></div>
-  </div>
-
-  <p class="chart-explanation">
-    Shows how rainfall accumulates over consecutive days. Each bar represents the rainfall added that day.
   </p>
 </div>
 
