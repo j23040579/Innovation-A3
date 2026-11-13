@@ -64,9 +64,7 @@ let currentPref = 'tokyo';
 let chartPref = 'tokyo';
 let selectedMapHazard = 'typhoon';
 const SNOW_MODEL_PREFECTURES = new Set(['niigata','yamagata']);
-let mapSnowData = new Map();
-let mapRainData = new Map();
-let mapOverviewData = new Map();
+let mapPredictionData = new Map();
 let charts = {};
 // Period applied by Check risk: {from, to, months}. Null = full year.
 let activePeriod = null;
@@ -305,40 +303,18 @@ window.applyKikanRiskContext = (prefecture, period)=>{
 function modeledRiskScore(pref){
   return Math.max(...Object.entries(pref.hazards).filter(([key])=>key !== 'snow' || SNOW_MODEL_PREFECTURES.has(Object.keys(PREFS).find(id=>PREFS[id]===pref))).map(([,value])=>value));
 }
-function mapRiskColor(score){
-  if(score === null || score === undefined || !Number.isFinite(Number(score))) return '#FFFFFF';
-  if(Number(score) < 25) return '#FED7AA';
-  if(Number(score) < 45) return '#F59E0B';
-  return '#C2410C';
-}
 function hasMapSnowPrediction(id){
-  const prediction = mapSnowData.get(id)?.snow_prediction;
-  return prediction?.execution_mode === 'inference'
-    && ['low','medium','high'].includes(String(prediction.risk_level || '').toLowerCase());
+  return window.KikanMapHelpers?.isSnowMapPrediction(mapPredictionData.get(id)?.snow);
 }
-function mapSnowColor(id){
-  if(!hasMapSnowPrediction(id)) return '#FFFFFF';
-  const risk = String(mapSnowData.get(id).snow_prediction.risk_level).toLowerCase();
-  return risk === 'high' ? '#C2410C' : risk === 'medium' ? '#F59E0B' : '#FED7AA';
+function mapPrefectureColor(id){
+  return window.KikanMapHelpers?.hazardMapColor(mapPredictionData.get(id)?.[selectedMapHazard]) || '#FFFFFF';
 }
-function mapRainColor(id){
-  const risk = String(mapRainData.get(id)?.rain_prediction?.risk_level || '').trim().toLowerCase();
-  if(['low','no/minimal rain','no rain','none'].includes(risk)) return '#FED7AA';
-  if(['moderate','medium'].includes(risk)) return '#F59E0B';
-  if(['high','critical'].includes(risk)) return '#C2410C';
-  return '#FFFFFF';
-}
-function mapOverviewColor(id){
-  const risk = String(mapOverviewData.get(id)?.primary_risk_level || '').trim().toLowerCase();
-  if(['low','no/minimal rain','no rain','none'].includes(risk)) return '#FED7AA';
-  if(['moderate','medium'].includes(risk)) return '#F59E0B';
-  if(['high','critical'].includes(risk)) return '#C2410C';
-  return null;
-}
-function mapPrefectureColor(id, score){
-  if(selectedMapHazard === 'snow') return mapSnowColor(id);
-  if(selectedMapHazard === 'rain') return mapRainColor(id);
-  return mapOverviewColor(id) || mapRiskColor(score);
+function setMapHazardForPrefecture(id){
+  selectedMapHazard = window.KikanMapHelpers?.nextMapHazardForPrefecture(
+    selectedMapHazard,
+    PREFS[id]?.name,
+    hasMapSnowPrediction(id)
+  ) || selectedMapHazard;
 }
 function updateMapChoropleth(){
   const selector = document.getElementById('map-hazard-select');
@@ -346,18 +322,13 @@ function updateMapChoropleth(){
     const snowOption = selector.querySelector('option[value="snow"]');
     const snowAvailable = hasMapSnowPrediction(currentPref);
     if(snowOption) snowOption.hidden = !snowAvailable;
-    if(selectedMapHazard === 'snow' && !snowAvailable) selectedMapHazard = 'typhoon';
     selector.value = selectedMapHazard;
   }
-  const hazardMeta = [
-    {key:'typhoon', label:'Typhoon'},
-    {key:'rain', label:'Heavy rain'},
-    {key:'flood', label:'Flood'},
-    {key:'landslide', label:'Landslide'},
-    {key:'snow', label:'Heavy snow'}
-  ].find(h=>h.key===selectedMapHazard);
   const legendTitle = document.getElementById('map-legend-title');
-  if(legendTitle) legendTitle.textContent = (hazardMeta?.label || 'Disaster') + ' risk';
+  if(legendTitle) legendTitle.textContent = window.KikanMapHelpers?.mapLegendTitle(
+    selectedMapHazard,
+    mapPredictionData.get(currentPref)?.[selectedMapHazard]
+  ) || 'Disaster risk';
   document.querySelectorAll('.pref').forEach(el=>{
     const p = PREFS[el.dataset.id];
     if(p){
@@ -365,8 +336,7 @@ function updateMapChoropleth(){
       el.classList.toggle('active', selected);
       el.setAttribute('aria-pressed', String(selected));
       const darkMap = document.documentElement.getAttribute('data-theme') === 'dark';
-      const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
-      el.style.fill = mapPrefectureColor(el.dataset.id, score);
+      el.style.fill = mapPrefectureColor(el.dataset.id);
       el.style.opacity = '1';
       el.style.strokeWidth = selected ? '1.4' : '1';
       el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
@@ -397,26 +367,21 @@ mapHazardSelect?.addEventListener('change', ()=>{
   selectedMapHazard = mapHazardSelect.value;
   updateMapChoropleth();
 });
-window.updateKikanSnowMapData = items=>{
+window.updateKikanMapPredictions = items=>{
   const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  mapSnowData = new Map(items.map(item=>[normalize(item.prefecture), item]));
+  mapPredictionData = new Map(items.map(item=>[
+    normalize(item.prefecture),
+    item.hazard_predictions || {}
+  ]));
+  setMapHazardForPrefecture(currentPref);
   updateMapChoropleth();
-};
-window.updateKikanMapOverviewData = items=>{
-  const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  mapOverviewData = new Map(items.map(item=>[normalize(item.prefecture), item]));
-  updateMapChoropleth();
-};
-window.updateKikanRainMapData = items=>{
-  const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  mapRainData = new Map(items.map(item=>[normalize(item.prefecture), item]));
-  if(selectedMapHazard === 'rain') updateMapChoropleth();
 };
 window.updateKikanRiskMapSelection = ({prefecture, riskLevel}={})=>{
   const normalize = value=>String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const id = Object.keys(PREFS).find(key=>normalize(PREFS[key].name)===normalize(prefecture));
   if(!id) return;
   currentPref = id;
+  setMapHazardForPrefecture(id);
   document.getElementById('map-summary-name').textContent = PREFS[id].name;
   if(riskLevel) document.getElementById('map-summary-hazard').textContent = riskLevel;
   document.getElementById('map-risk-summary').setAttribute(
@@ -427,8 +392,8 @@ window.updateKikanRiskMapSelection = ({prefecture, riskLevel}={})=>{
   zoomToPrefecture(id);
 };
 function selectPref(id, options = {}){
-  if(selectedMapHazard === 'snow' && !hasMapSnowPrediction(id)) selectedMapHazard = 'typhoon';
   currentPref = id;
+  setMapHazardForPrefecture(id);
   chartPref = id;
   const p = PREFS[id];
   const clim = CLIMATE[p.archetype];
@@ -445,8 +410,7 @@ function selectPref(id, options = {}){
     el.classList.toggle('active', selected);
     el.setAttribute('aria-pressed', String(selected));
     const darkMap = document.documentElement.getAttribute('data-theme')==='dark';
-    const score = hazardScoresFor(el.dataset.id)?.[selectedMapHazard];
-    el.style.fill = mapPrefectureColor(el.dataset.id, score);
+    el.style.fill = mapPrefectureColor(el.dataset.id);
     el.style.opacity = '1';
     el.style.strokeWidth = selected ? '1.4' : '1';
     el.style.stroke = selected ? (darkMap ? '#BFDBFE' : '#1D4ED8') : (darkMap ? '#26384B' : '#FFFFFF');
@@ -467,7 +431,7 @@ function selectPref(id, options = {}){
 
   const grid = document.getElementById('hazard-grid');
   grid.innerHTML = '';
-  HAZARD_META.filter(h=>h.key !== 'snow' || SNOW_MODEL_PREFECTURES.has(id)).forEach(h=>{
+  HAZARD_META.filter(h=>h.key !== 'snow' || id === 'yamagata').forEach(h=>{
     const l = levelFor(scores[h.key]);
     const el = document.createElement('div');
     el.className = 'card hazard';
@@ -487,7 +451,6 @@ function selectPref(id, options = {}){
   const regionSelect = document.getElementById('region-select');
   if(regionSelect) regionSelect.value = id;
   updateMapChoropleth();
-  renderPeriodSummary(id);
   // Keep the full Japan map in view; users can zoom manually with the map controls.
 }
 
@@ -663,15 +626,6 @@ document.querySelectorAll('[data-access]').forEach(btn=>{
 updateMapChoropleth();
 
 /* ---------------- init ---------------- */
-/* single Safety tips panel (next to the section heading) */
-document.getElementById('tips-btn').addEventListener('click', ()=>{
-  const btn = document.getElementById('tips-btn');
-  const panel = document.getElementById('tips-panel');
-  const open = btn.getAttribute('aria-expanded') === 'true';
-  btn.setAttribute('aria-expanded', String(!open));
-  panel.hidden = open;
-});
-
 // Date handling. Dates are YYYY-MM-DD strings, compared as strings and never converted
 // to Date objects or timestamps. "Today" is the current calendar date in Japan.
 const fromDateInput = document.getElementById('from-date');
@@ -776,29 +730,6 @@ function hazardScoresFor(id){
   });
   return scores;
 }
-// Prototype summary under the monitoring card. Built from the same hazard scores the
-// cards use, so it always matches them. Shows "full year" when no Check risk period is applied.
-function renderPeriodSummary(id){
-  const summary = document.getElementById('monitor-risk-summary');
-  if(!summary) return;
-  const p = PREFS[id];
-  const scores = hazardScoresFor(id);
-  const months = activeMonthIndexes();
-  const eligible = HAZARD_META.filter(h=>h.key !== 'snow' || SNOW_MODEL_PREFECTURES.has(id));
-  const top = eligible.reduce((best,h)=>scores[h.key] > scores[best.key] ? h : best, eligible[0]);
-  const level = levelFor(scores[top.key]).label;
-  const series = p.monthly?.[top.key];
-  let peak = '';
-  if(Array.isArray(series)){
-    const peakIdx = months.reduce((best,i)=>series[i] > series[best] ? i : best, months[0]);
-    peak = ', peaking in ' + MONTHS[peakIdx];
-  }
-  const period = activePeriod
-    ? ', ' + formatDateLabel(activePeriod.from) + ' – ' + formatDateLabel(activePeriod.to)
-    : ' (full year)';
-  summary.textContent = 'Prototype summary for ' + p.name + period + ': the highest illustrative score is ' + top.label + ' (' + level + ')' + peak + '. Check official local alerts before travel. These are illustrative values, not live warnings.';
-}
-
 [fromDateInput, toDateInput].forEach(input => {
   if(!input) return;
   input.addEventListener('input', () => validateDateRange(false));
