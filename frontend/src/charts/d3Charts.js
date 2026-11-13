@@ -4,7 +4,6 @@ import * as d3 from "d3";
 import { drawAxes, gridLines, tickDates } from "./chartHelpers.js";
 
 import { renderHeavyRainFlood } from "./HeavyRainFlood.js";
-import { renderLandslideMudslide } from "./LandslideMudslide.js";
 import { renderHeavySnowBlizzard } from "./HeavySnowBlizzard.js";
 import { renderTyphoonSeasonality } from "./TyphoonSeasonality.js";
 
@@ -40,13 +39,6 @@ const TIMESERIES_CHARTS = [
     label: "Rainfall",
     draw: renderHeavyRainFlood,
     limit: 30,
-  },
-  {
-    id: "chart-landslide",
-    value: (p) => p.rain_sum,
-    label: "Rainfall accumulation",
-    draw: renderLandslideMudslide,
-    limit: 14,
   },
   {
     id: "chart-snow",
@@ -291,7 +283,6 @@ function drawMonthlyChart(config) {
       "aria-label",
       `${label}. Monthly illustrative scores from 0 to 100.`
     );
-
   svg
     .append("title")
     .text(`${label} — ${regionName}`);
@@ -399,7 +390,6 @@ export function renderMonthlyCharts({
     .getElementById("chart-snow")
     ?.closest(".chart-card");
 
-  // Keep snow chart visible as the fifth chart.
   if (snowCard) {
     snowCard.hidden = false;
   }
@@ -504,7 +494,6 @@ function drawTimeseriesChart({
 
   const group = svg.append("g");
 
-  // The four independent chart files expect this format.
   const ctx = {
     group,
     data: visibleData,
@@ -535,7 +524,6 @@ function drawTimeseriesChart({
     data.length
   );
 
-  // Snow scatter plot uses the full dataset.
   if (noZoom) {
     container.dataset.zoomMode = "none";
   }

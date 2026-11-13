@@ -258,27 +258,6 @@ export const kikanMarkup = `<header class="topnav">
 
 <div class="card chart-card">
   <div class="chart-heading">
-    <h3>Landslide &amp; Mudslide</h3>
-    <div class="chart-actions" aria-label="Chart zoom controls">
-      <button type="button" data-chart-action="out" data-chart-id="chart-landslide" aria-label="Zoom out on landslide chart">−</button>
-      <button type="button" data-chart-action="in" data-chart-id="chart-landslide" aria-label="Zoom in on landslide chart">+</button>
-      <button type="button" data-chart-action="reset" data-chart-id="chart-landslide" aria-label="Reset landslide chart zoom">Reset</button>
-    </div>
-  </div>
-
-  <div class="sub">Cumulative rainfall (mm)</div>
-
-  <div class="chart-wrap">
-    <div id="chart-landslide" class="d3-chart" role="img" aria-label="Cumulative rainfall waterfall chart"></div>
-  </div>
-
-  <p class="chart-explanation">
-    Shows how rainfall accumulates over consecutive days. Each bar represents the rainfall added that day.
-  </p>
-</div>
-
-<div class="card chart-card">
-  <div class="chart-heading">
     <h3>Heavy Snow &amp; Blizzard</h3>
     <div class="chart-actions" aria-label="Chart zoom controls">
       <button type="button" data-chart-action="out" data-chart-id="chart-snow" aria-label="Zoom out on snow chart">−</button>
