@@ -77,7 +77,8 @@ test("the temperature status target contains the full Weather monitoring card", 
   assert.ok(cardMarkup);
   assert.match(cardMarkup[1], /Weather monitoring mode/);
   assert.match(cardMarkup[1], /class="[^"]*\btemperature-only\b/);
-  assert.match(cardMarkup[1], /id="monitor-risk-summary"/);
+  assert.doesNotMatch(kikanMarkup, /monitor-risk-summary|Safety tips|tips-panel/);
+  assert.match(kikanMarkup, /id="forecast-status" role="status"/);
 });
 
 test("monitor card backgrounds follow temperature status and respect theme and contrast", async () => {
